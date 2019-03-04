@@ -7,6 +7,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from torch import from_numpy
+from torch import cat
 
 class RoadSegmentation(Dataset):
     """
@@ -25,6 +26,7 @@ class RoadSegmentation(Dataset):
         """
         super().__init__()
         self._base_dir = base_dir
+        self._lidar_dir = os.path.join(self._base_dir, 'hght')
         self._image_dir = os.path.join(self._base_dir, 'rgb')
         self._cat_dir = os.path.join(self._base_dir, 'rev_annotations')
 
@@ -33,6 +35,7 @@ class RoadSegmentation(Dataset):
         self.im_ids = []
         self.images = []
         self.categories = []
+        self.hght = []
 
         print(os.path.join(os.path.join(_splits_dir, split + '.txt')))
         with open(os.path.join(os.path.join(_splits_dir, split + '.txt')), "r") as f:
@@ -40,26 +43,39 @@ class RoadSegmentation(Dataset):
 
         for ii, line in enumerate(lines):
             _image = os.path.join(self._image_dir, line + ".png")
+            _hght = os.path.join(self._lidar_dir, line + ".png")
             _cat = os.path.join(self._cat_dir, line + ".png")
             assert os.path.isfile(_image)
+            assert os.path.isfile(_hght)
             assert os.path.isfile(_cat)
             self.im_ids.append(line)
             self.images.append(_image)
+            self.hght.append(_hght)
             self.categories.append(_cat)
          
         assert (len(self.images) == len(self.categories))
-
+        assert (len(self.hght) == len(self.categories))
         # Display stats
         print('Number of images in {}: {:d}'.format(split, len(self.images)))
 
-    def transform_road(self, sample):
+    def transform_rgb(self, sample):
         composed_transforms = transforms.Compose([
             # tr.RandomHorizontalFlip(),
             # tr.RandomScaleCrop(base_size=self.args.base_size, crop_size=self.args.crop_size),
             # tr.RandomGaussianBlur(),
-            # tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+            transforms.Normalize(mean=(0.339, 0.336, 0.302), std=(0.056, 0.041, 0.021)),
             transforms.ToTensor()])
-        # print("Transforming")
+        print("Transforming")
+        return composed_transforms(sample)
+    
+    def transform_hght(self, sample):
+        composed_transforms = transforms.Compose([
+            # tr.RandomHorizontalFlip(),
+            # tr.RandomScaleCrop(base_size=self.args.base_size, crop_size=self.args.crop_size),
+            # tr.RandomGaussianBlur(),
+            transforms.Normalize(mean=(0.4285), std=(0.197)),
+            transforms.ToTensor()])
+        print("Transforming")
         return composed_transforms(sample)
 
     def __len__(self):
@@ -67,13 +83,18 @@ class RoadSegmentation(Dataset):
 
 
     def __getitem__(self, index):
-        _img, _target = self._make_img_gt_point_pair(index)
+        _img, _hght, _target = self._make_img_gt_point_pair(index)
         composed_transforms = transforms.Compose([ transforms.ToTensor()])
         _t_img = composed_transforms(_img)
+        _t_hght = composed_transforms(_hght)
+        #print(_t_img.shape)
+        #print(_t_hght.shape)
+        _t_imhg = cat((_t_img,_t_hght),0)
         _target = np.array(_target).astype(np.float32)
         _t_target = from_numpy(_target).long().view(512,512)
+        #print(_t_imhg.shape)
         # print(_t_target.shape)
-        sample = {'image': _t_img, 'label': _t_target}
+        sample = {'image': _t_imhg, 'label': _t_target}
 
         return sample
 
@@ -88,11 +109,13 @@ class RoadSegmentation(Dataset):
 
     def _make_img_gt_point_pair(self, index):
         _img = Image.open(self.images[index]).convert('RGB')
+        _hght = Image.open(self.hght[index])
         _img_padded = self._padding(_img, 512)
+        _hght_padded = self._padding(_hght, 512)
         _target = Image.open(self.categories[index])
         _target_padded = self._padding(_target, 512)
         # print(_target_padded.size)
-        return _img_padded, _target_padded      
+        return _img_padded, _hght_padded, _target_padded      
 
 
 def make_data_splits(base_dir, batch_size=4):

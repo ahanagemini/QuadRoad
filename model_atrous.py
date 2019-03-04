@@ -4,9 +4,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
 
-class SegNet(nn.Module):
+class SegNet_atrous(nn.Module):
     def __init__(self,input_nbr,label_nbr):
-        super(SegNet, self).__init__()
+        super(SegNet_atrous, self).__init__()
 
         batchNorm_momentum = 0.1
 
@@ -34,19 +34,21 @@ class SegNet(nn.Module):
         self.conv43 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
         self.bn43 = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
 
-        self.conv51 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        self.conv51 = nn.Conv2d(512, 512, kernel_size=3, dilation=2, padding=2)
         self.bn51 = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
-        self.conv52 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        self.conv52 = nn.Conv2d(512, 512, kernel_size=3, dilation=2, padding=2)
         self.bn52 = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
-        self.conv53 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        self.conv53 = nn.Conv2d(512, 512, kernel_size=3, dilation=2, padding=2)
         self.bn53 = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
 
-        self.conv53d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        self.conv53d = nn.Conv2d(512, 512, kernel_size=3, dilation=1, padding=1)
         self.bn53d = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
-        self.conv52d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        self.conv52d = nn.Conv2d(512, 512, kernel_size=3, dilation=1, padding=1)
         self.bn52d = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
-        self.conv51d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        self.conv51d = nn.Conv2d(512, 512, kernel_size=3, dilation=1, padding=1)
         self.bn51d = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
+        
+#        self.convaspp = nn.Conv2d(2048, 512, kernel_size=1, dilation=1, padding=0)
 
         self.conv43d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
         self.bn43d = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
@@ -102,14 +104,19 @@ class SegNet(nn.Module):
         x51 = F.leaky_relu(self.bn51(self.conv51(x4p)), negative_slope=0.1)
         x52 = F.leaky_relu(self.bn52(self.conv52(x51)), negative_slope=0.1)
         x53 = F.leaky_relu(self.bn53(self.conv53(x52)), negative_slope=0.1)
-        x5p, id5 = F.max_pool2d(x53,kernel_size=2, stride=2,return_indices=True)
+#        x5p, id5 = F.max_pool2d(x53,kernel_size=2, stride=1,return_indices=True)
 
 
         # Stage 5d
-        x5d = F.max_unpool2d(x5p, id5, kernel_size=2, stride=2)
-        x53d = F.leaky_relu(self.bn53d(self.conv53d(x5d)), negative_slope=0.1)
+#        x5d = F.max_unpool2d(x5p, id5, kernel_size=2, stride=1)
+        x53d = F.leaky_relu(self.bn53d(self.conv53d(x53)), negative_slope=0.1)
         x52d = F.leaky_relu(self.bn52d(self.conv52d(x53d)), negative_slope=0.1)
         x51d = F.leaky_relu(self.bn51d(self.conv51d(x52d)), negative_slope=0.1)
+
+        #Stage aspp
+
+#        x5cat = torch.cat((x5d, x53d, x52d, x51d), dim=1)
+#        x5aspp = F.leaky_relu(self.convaspp(x5cat), negative_slope=0.1)
 
         # Stage 4d
         x4d = F.max_unpool2d(x51d, id4, kernel_size=2, stride=2)

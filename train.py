@@ -15,6 +15,9 @@ from torch import no_grad
 from torch import FloatTensor
 from torch import save
 import matplotlib.pyplot as plt
+from model_deep import SegNet_deep
+from model_atrous import SegNet_atrous
+from DeepLabv3_plus import DeepLabv3_plus
 
 def training_and_val(epochs, base_dir, batch_size):
         # Define Dataloader
@@ -22,7 +25,8 @@ def training_and_val(epochs, base_dir, batch_size):
 
         # Define network
     
-    model = SegNet(3,2)
+    model = SegNet_atrous(4,2)
+    # model = DeepLabv3_plus(in_channels=3, num_classes=2)
 #    model.fc = nn.Linear(num_ftrs, nclass)
     optimizer = optim.Adam(model.parameters(), lr = 0.0001, betas = [0.99, 0.999])
             # self.criterion = nn.CrossEntropyLoss(weight=class_weights)
@@ -76,23 +80,23 @@ def training_and_val(epochs, base_dir, batch_size):
             pred = output.data.cpu().numpy()
             target = target.cpu().numpy()
             pred = np.argmax(pred, axis=1)
-            if epoch == epochs-1:
-                for j in range(0,4):
-                    outFilepath = "/home/ahana/road_data/results/"+str(i)+"_"+str(j)+".png"
-                    outFilepath_target = "/home/ahana/road_data/target/"+str(i)+"_"+str(j)+".png"
-                    to_save = pred[j,:,:]
-                    target_to_save = target[j,:,:]
-                    scipy.misc.toimage(to_save).save(outFilepath)
-                    scipy.misc.toimage(target_to_save).save(outFilepath_target)
+            #if epoch == epochs-1:
+                #for j in range(0,4):
+                    #outFilepath = "/home/ahana/road_data/results_norm_deep/"+str(i)+"_"+str(j)+".png"
+                    #outFilepath_target = "/home/ahana/road_data/target_norm_deep/"+str(i)+"_"+str(j)+".png"
+                    #to_save = pred[j,:,:]
+                    #target_to_save = target[j,:,:]
+                    #scipy.misc.toimage(to_save).save(outFilepath)
+                    #scipy.misc.toimage(target_to_save).save(outFilepath_target)
 
-            if epoch == epochs-51:
-                for j in range(0,4):
-                    outFilepath = "/home/ahana/road_data/results_pre/"+str(i)+"_"+str(j)+".png"
-                    outFilepath_target = "/home/ahana/road_data/target_pre/"+str(i)+"_"+str(j)+".png"
-                    to_save = pred[j,:,:]
-                    target_to_save = target[j,:,:]
-                    scipy.misc.toimage(to_save).save(outFilepath)
-                    scipy.misc.toimage(target_to_save).save(outFilepath_target)
+            #if epoch == epochs-51:
+                #for j in range(0,4):
+                    #outFilepath = "/home/ahana/road_data/results_pre_norm_deep/"+str(i)+"_"+str(j)+".png"
+                    #outFilepath_target = "/home/ahana/road_data/target_pre_norm_deep/"+str(i)+"_"+str(j)+".png"
+                    #to_save = pred[j,:,:]
+                    #target_to_save = target[j,:,:]
+                    #scipy.misc.toimage(to_save).save(outFilepath)
+                    #scipy.misc.toimage(target_to_save).save(outFilepath_target)
             # Add batch sample into evaluator
             target_f = target.flatten()
             pred_f = pred.flatten()
@@ -115,14 +119,13 @@ def training_and_val(epochs, base_dir, batch_size):
         RMIoU = intersection/(ground_truth_set + predicted_set - intersection)
         if RMIoU[1] > best:
             best = RMIoU[1]
-            save(model.state_dict(), "/home/ahana/pytorch_road/model_best/Segneti_best")
-        
+            #save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_best_5em0")
+            save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_best_5em0_4c")
         if epoch == epochs-51:
-            save(model.state_dict(), "/home/ahana/pytorch_road/model_best/Segnet_pre")
- 
-        if epoch == epochs-1:
-            save(model.state_dict(), "/home/ahana/pytorch_road/model_best/Segnet_final")
-        
+            #save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_pre_atrous_5em0")
+            save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_pre_atrous_5em0_4c")
+        #save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_final_atrous_5em0")
+        save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_final_atrous_5em0_4c")
         ious.append(RMIoU[1])
         # Fast test during the training
         print('Validation:')
@@ -130,17 +133,17 @@ def training_and_val(epochs, base_dir, batch_size):
         print("RMIoU: {}, Intersection: {}, Ground truth: {}, Predicted: {}, Best: {}".format(RMIoU, intersection, ground_truth_set, predicted_set, best))
 
     plt.plot(losses)
-    plt.savefig("/home/ahana/pytorch_road/loss.png")
+    plt.savefig("/home/ahana/pytorch_road/loss_SegNet_5em0_4c.png")
     plt.clf()
     plt.plot(ious)
     print(losses)
     print(ious)
-    plt.savefig("/home/ahana/pytorch_road/iou.png")    
+    plt.savefig("/home/ahana/pytorch_road/iou_SegNet_5em0_4c.png")    
 
 def main():
 
     base_dir = "/home/ahana/road_data"
-    epochs = 125
+    epochs = 150
     batch_size = 4
     print('Starting Epoch: 0')
     print('Total Epoches:', epochs)
