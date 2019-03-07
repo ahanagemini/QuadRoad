@@ -120,12 +120,12 @@ def training_and_val(epochs, base_dir, batch_size):
         if RMIoU[1] > best:
             best = RMIoU[1]
             #save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_best_5em0")
-            save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_best_5em0_4c")
+            save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_best_5em0_4c_norm_gen")
         if epoch == epochs-51:
             #save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_pre_atrous_5em0")
-            save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_pre_atrous_5em0_4c")
+            save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_pre_atrous_5em0_4c_norm_gen")
         #save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_final_atrous_5em0")
-        save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_final_atrous_5em0_4c")
+        save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_final_atrous_5em0_4c_norm_gen")
         ious.append(RMIoU[1])
         # Fast test during the training
         print('Validation:')
@@ -133,12 +133,12 @@ def training_and_val(epochs, base_dir, batch_size):
         print("RMIoU: {}, Intersection: {}, Ground truth: {}, Predicted: {}, Best: {}".format(RMIoU, intersection, ground_truth_set, predicted_set, best))
 
     plt.plot(losses)
-    plt.savefig("/home/ahana/pytorch_road/loss_SegNet_5em0_4c.png")
+    plt.savefig("/home/ahana/pytorch_road/loss_SegNet_5em0_4c_norm_gen.png")
     plt.clf()
     plt.plot(ious)
     print(losses)
     print(ious)
-    plt.savefig("/home/ahana/pytorch_road/iou_SegNet_5em0_4c.png")    
+    plt.savefig("/home/ahana/pytorch_road/iou_SegNet_5em0_4c_norm_gen.png")    
 
 def main():
 

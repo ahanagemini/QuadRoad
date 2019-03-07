@@ -8,7 +8,7 @@ class SegNet_atrous(nn.Module):
     def __init__(self,input_nbr,label_nbr):
         super(SegNet_atrous, self).__init__()
 
-        batchNorm_momentum = 0.1
+        batchNorm_momentum = 0.08
 
         self.conv11 = nn.Conv2d(input_nbr, 64, kernel_size=3, padding=1)
         self.bn11 = nn.BatchNorm2d(64, momentum= batchNorm_momentum)
@@ -40,6 +40,8 @@ class SegNet_atrous(nn.Module):
         self.bn52 = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
         self.conv53 = nn.Conv2d(512, 512, kernel_size=3, dilation=2, padding=2)
         self.bn53 = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
+        
+        self.dropout = nn.Dropout(0.1)
 
         self.conv53d = nn.Conv2d(512, 512, kernel_size=3, dilation=1, padding=1)
         self.bn53d = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
@@ -105,11 +107,11 @@ class SegNet_atrous(nn.Module):
         x52 = F.leaky_relu(self.bn52(self.conv52(x51)), negative_slope=0.1)
         x53 = F.leaky_relu(self.bn53(self.conv53(x52)), negative_slope=0.1)
 #        x5p, id5 = F.max_pool2d(x53,kernel_size=2, stride=1,return_indices=True)
-
-
+        x5do = self.dropout(x53)
+      
         # Stage 5d
 #        x5d = F.max_unpool2d(x5p, id5, kernel_size=2, stride=1)
-        x53d = F.leaky_relu(self.bn53d(self.conv53d(x53)), negative_slope=0.1)
+        x53d = F.leaky_relu(self.bn53d(self.conv53d(x5do)), negative_slope=0.1)
         x52d = F.leaky_relu(self.bn52d(self.conv52d(x53d)), negative_slope=0.1)
         x51d = F.leaky_relu(self.bn51d(self.conv51d(x52d)), negative_slope=0.1)
 

@@ -63,8 +63,8 @@ class RoadSegmentation(Dataset):
             # tr.RandomHorizontalFlip(),
             # tr.RandomScaleCrop(base_size=self.args.base_size, crop_size=self.args.crop_size),
             # tr.RandomGaussianBlur(),
-            transforms.Normalize(mean=(0.339, 0.336, 0.302), std=(0.056, 0.041, 0.021)),
             transforms.ToTensor()])
+            #transforms.Normalize(mean=(0.339, 0.336, 0.302), std=(0.056, 0.041, 0.021))])
         print("Transforming")
         return composed_transforms(sample)
     
@@ -73,8 +73,8 @@ class RoadSegmentation(Dataset):
             # tr.RandomHorizontalFlip(),
             # tr.RandomScaleCrop(base_size=self.args.base_size, crop_size=self.args.crop_size),
             # tr.RandomGaussianBlur(),
-            transforms.Normalize(mean=(0.4285), std=(0.197)),
             transforms.ToTensor()])
+            #transforms.Normalize((0.4285),(0.197))])
         print("Transforming")
         return composed_transforms(sample)
 
@@ -90,11 +90,13 @@ class RoadSegmentation(Dataset):
         #print(_t_img.shape)
         #print(_t_hght.shape)
         _t_imhg = cat((_t_img,_t_hght),0)
+        composed_transforms = transforms.Compose([ transforms.Normalize(mean=(0.339, 0.336, 0.302, 0.4285), std=(0.056, 0.041, 0.021, 0.197))])
+        _tn_imhg = composed_transforms(_t_imhg)
         _target = np.array(_target).astype(np.float32)
         _t_target = from_numpy(_target).long().view(512,512)
-        #print(_t_imhg.shape)
+        #print(_tn_imhg.shape)
         # print(_t_target.shape)
-        sample = {'image': _t_imhg, 'label': _t_target}
+        sample = {'image': _tn_imhg, 'label': _t_target}
 
         return sample
 

@@ -25,13 +25,15 @@ def test(base_dir, batch_size):
     train_loader, val_loader, test_loader, nclass = make_data_splits(base_dir, batch_size=4)
 
         # Define network
-    
-    model = SegNet_atrous(3,2)
+    with open(os.path.join(os.path.join(base_dir, 'train.txt')), "r") as f:
+            lines = f.read().splitlines()    
+
+    model = SegNet_atrous(4,2)
 
     model = model.cuda()
-    model.load_state_dict(load("/home/ahana/pytorch_road/model_best/SegNet_best_5em0"))
+    model.load_state_dict(load("/home/ahana/pytorch_road/model_best/SegNet_pre_atrous_5em0_4c_norm"))
     model.eval()
-    tbar = tqdm(test_loader)
+    tbar = tqdm(train_loader)
     overall_confusion_matrix = None
     for i, sample in enumerate(tbar):
         image, target = sample['image'], sample['label']
@@ -41,13 +43,13 @@ def test(base_dir, batch_size):
         pred = output.data.cpu().numpy()
         target = target.cpu().numpy()
         pred = np.argmax(pred, axis=1)
-        for j in range(0,4):
-            outFilepath = "/home/ahana/road_data/results_test_norm_atrous/"+str(i)+"_"+str(j)+".png"
-            outFilepath_target = "/home/ahana/road_data/target_test_norm_atrous/"+str(i)+"_"+str(j)+".png"
-            to_save = pred[j,:,:]
-            target_to_save = target[j,:,:]
-            scipy.misc.toimage(to_save).save(outFilepath)
-            scipy.misc.toimage(target_to_save).save(outFilepath_target)
+        #for j in range(0,4):
+            #outFilepath = "/home/ahana/road_data/pred_train_4c/"+lines[i*batch_size+j]+".png"
+            #outFilepath_target = "/home/ahana/road_data/target_test_norm_atrous/"+str(i)+"_"+str(j)+".png"
+            #to_save = pred[j,:,:]
+            #target_to_save = target[j,:,:]
+            #scipy.misc.toimage(to_save).save(outFilepath)
+            #scipy.misc.toimage(target_to_save).save(outFilepath_target)
 
             # Add batch sample into evaluator
         target_f = target.flatten()
