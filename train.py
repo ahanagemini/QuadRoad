@@ -4,13 +4,14 @@ import scipy.misc
 import numpy as np
 from tqdm import tqdm
 from torch.nn import BCEWithLogitsLoss
-from load_road import make_data_splits
+from load_road_3c import make_data_splits
 from torchvision import models
 from sklearn.metrics import confusion_matrix
 from torch import nn
 from torch import optim
 from torchsummary import summary
 from model import SegNet
+from model_leaky import SegNet_leaky
 from torch import no_grad
 from torch import FloatTensor
 from torch import save
@@ -25,10 +26,10 @@ def training_and_val(epochs, base_dir, batch_size):
 
         # Define network
     
-    model = SegNet_atrous(4,2)
+    model = SegNet(3,2)
     # model = DeepLabv3_plus(in_channels=3, num_classes=2)
 #    model.fc = nn.Linear(num_ftrs, nclass)
-    optimizer = optim.Adam(model.parameters(), lr = 0.0001, betas = [0.99, 0.999])
+    optimizer = optim.SGD(model.parameters(), lr = 0.001, momentum=0.9)
             # self.criterion = nn.CrossEntropyLoss(weight=class_weights)
     weights = [0.29, 1.69]
     class_weights = FloatTensor(weights).cuda()
@@ -44,6 +45,7 @@ def training_and_val(epochs, base_dir, batch_size):
     best = 0.0
     losses = []
     ious = []
+    best_epoch = 0
     for epoch in range(0, epochs):
 
         train_loss = 0.0
@@ -119,31 +121,48 @@ def training_and_val(epochs, base_dir, batch_size):
         RMIoU = intersection/(ground_truth_set + predicted_set - intersection)
         if RMIoU[1] > best:
             best = RMIoU[1]
+            best_epoch = epoch
             #save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_best_5em0")
-            save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_best_5em0_4c_norm_gen")
-        if epoch == epochs-51:
+            save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_best_lr_001")
+        if epoch % 10 == 0:
             #save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_pre_atrous_5em0")
-            save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_pre_atrous_5em0_4c_norm_gen")
+            outfile = "/home/ahana/pytorch_road/model_best/SegNet_pre_lr_001_" + str(epoch)
+            save(model.state_dict(), outfile)
+
+        if epoch == 75:
+            outfile = "/home/ahana/pytorch_road/model_best/SegNet_pre_lr_001_75"
+            save(model.state_dict(), outfile)
+
         #save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_final_atrous_5em0")
-        save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_final_atrous_5em0_4c_norm_gen")
+        save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_final_lr_001")
         ious.append(RMIoU[1])
         # Fast test during the training
         print('Validation:')
         print('[Epoch: %d, numImages: %5d]' % (epoch, i * batch_size + image.data.shape[0]))
         print("RMIoU: {}, Intersection: {}, Ground truth: {}, Predicted: {}, Best: {}".format(RMIoU, intersection, ground_truth_set, predicted_set, best))
 
+    
     plt.plot(losses)
-    plt.savefig("/home/ahana/pytorch_road/loss_SegNet_5em0_4c_norm_gen.png")
+    plt.savefig("/home/ahana/pytorch_road/loss_SegNet_lr_001.png")
     plt.clf()
     plt.plot(ious)
     print(losses)
     print(ious)
-    plt.savefig("/home/ahana/pytorch_road/iou_SegNet_5em0_4c_norm_gen.png")    
+    plt.savefig("/home/ahana/pytorch_road/iou_SegNet_lr_001.png")    
+    losses = [(i,x) for i,x in enumerate(losses)]
+    ious = [(i,x) for i,x in enumerate(ious)]
+    fp = open("SegNet_lr_001.txt", "w")
+    fp.write(str(losses))
+    fp.write("\n")
+    fp.write(str(ious))
+    fp.write("\n")
+    fp.write(str(best_epoch))
+    fp.close()
 
 def main():
 
     base_dir = "/home/ahana/road_data"
-    epochs = 150
+    epochs = 80
     batch_size = 4
     print('Starting Epoch: 0')
     print('Total Epoches:', epochs)
