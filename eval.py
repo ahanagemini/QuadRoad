@@ -4,7 +4,7 @@ import scipy.misc
 import numpy as np
 from tqdm import tqdm
 from torch.nn import BCEWithLogitsLoss
-from load_road_3c import make_data_splits
+from load_road import make_data_splits
 from torchvision import models
 from sklearn.metrics import confusion_matrix
 from torch import nn
@@ -20,6 +20,7 @@ from torch import load
 import matplotlib.pyplot as plt
 from model_atrous import SegNet_atrous
 from DeepLabv3_plus import DeepLabv3_plus
+from model_atrous_nl import SegNet_atrous_nl
 
 def test(base_dir, batch_size):
         # Define Dataloader
@@ -29,12 +30,12 @@ def test(base_dir, batch_size):
     with open(os.path.join(os.path.join(base_dir, 'test.txt')), "r") as f:
             lines = f.read().splitlines()    
 
-    model = SegNet(3,2)
+    model = SegNet_atrous(4,2)
 
     model = model.cuda()
-    model.load_state_dict(load("/home/ahana/pytorch_road/model_best/SegNet_pre_lr_002_80"))
+    model.load_state_dict(load("/home/ahana/pytorch_road/models/SegNet_pre_atrous_4c_1_lr_001_75"))
     model.eval()
-    tbar = tqdm(test_loader)
+    tbar = tqdm(train_loader)
     overall_confusion_matrix = None
     for i, sample in enumerate(tbar):
         image, target = sample['image'], sample['label']
