@@ -46,30 +46,40 @@ $ grep "TYPE (Integer)" tmp | cut -d"=" -f 2 > type_
 $ grep "DXF_LAYER (" tmp | cut -d"=" -f 2 > dxf_
 $ paste type_ dxf_ > type_dxf
 $ uniq type_dxf
+ 100	 PAVED-ISLAND
+ 101	 PAVED-ROAD
+ 102	 SIDEWALK
  50	 BUILDING
+ 51	 UNFINISHED-BUILDING
  63	 RUIN
  67	 SIDEWALK
- 70	 PAVED-ROAD
+ 75	 UNPAVED-ROAD
  77	 PAVED-DRIVEWAY
  78	 UNPAVED-DRIVEWAY
+ 80	 AIRPORT
  85	 PAVED-PARKING
  86	 UNPAVED-PARKING
+ 87	 LANDSCAPE-ISLAND
  999	 WATERBODY
+ 99	 TENNIS-COURT
 
 """
 
+import os
 from  osgeo import ogr, osr, gdal
 
 
-def draw_paved_road_mask(tiff_img, imperv_shp):
+def draw_road_mask(tiff_img, imperv_shp, *ignore_shps):
     """
     Given a geotiff satellite image and it's corresponding impervious surface
-    data as shapefiles, create a mask with road (pixel value 0).
+    data as shapefiles, create a mask with road (pixel value 0) regions and
+    other classes like buildings, driveway and other regions. 
     """
-    *base, leaf = tiff_img.split("/")
-    #if "sat" not in leaf:
-    #    leaf = leaf.split(".")[0] + "_sat.tif"
-    mask_img = "/".join(["/".join(base), "paved_rd_mask_" + leaf])    # "lasfiles/48837_7/paved_rd_mask_48837_7_sat.tif"
+    leaf = os.path.basename(tiff_img)
+    dirname = os.path.dirname(tiff_img)
+
+    # "lasfiles/48837_7/mask_48837_7_sat.tif"
+    mask_f = os.path.join(dirname, f"mask_{leaf}")
 
     driver = ogr.GetDriverByName('ESRI Shapefile')
     dataset = driver.Open(imperv_shp)
@@ -98,20 +108,32 @@ def draw_paved_road_mask(tiff_img, imperv_shp):
     
     # Create the raster dataset
     memory_driver = gdal.GetDriverByName('GTiff')
-    out_raster_ds = memory_driver.Create(mask_img, ncol, nrow, 1, gdal.GDT_Byte)
+    out_raster_ds = memory_driver.Create(mask_f, ncol, nrow, 1, gdal.GDT_Byte)
     
     # Set the ROI image's projection and extent to our input raster's projection and extent
     out_raster_ds.SetProjection(proj)
     out_raster_ds.SetGeoTransform(ext)
     
-    # Fill our output band with 255, no class label, value
-    b = out_raster_ds.GetRasterBand(1)
-    b.Fill(255)
     
-    # Set road filter and rasterize
-    road_filter = "DXF_LAYER = 'PAVED-ROAD'"
-    layer.SetAttributeFilter(road_filter)
-    status = burn_shp_layer_to_geotiff(out_raster_ds, layer, 0)
+    # Set ignore filter for the layer.
+    # Filter string should be in the format of an SQL WHERE clause.
+    mask_attrs = ['PAVED-ROAD', 'PAVED-ISLAND', 'SIDEWALK', 'BUILDING',
+       'UNFINISHED-BUILDING', 'RUIN', 'SIDEWALK', 'UNPAVED-ROAD',
+       'PAVED-DRIVEWAY', 'UNPAVED-DRIVEWAY', 'AIRPORT', 'PAVED-PARKING',
+       'UNPAVED-PARKING', 'LANDSCAPE-ISLAND', 'WATERBODY', 'TENNIS-COURT'
+    ]
+
+    keep_mask_attrs = mask_attrs[:1]
+
+    # Fill output band with a number denoting the background
+    b = out_raster_ds.GetRasterBand(1)
+    b.Fill(len(keep_mask_attrs))
+
+    # Give a number for each class
+    for i, attr in enumerate(keep_mask_attrs):
+        attr_filter = f"DXF_LAYER = '{attr}'"
+        layer.SetAttributeFilter(attr_filter)
+        status = burn_shp_layer_to_geotiff(out_raster_ds, layer, i)
 
     # Close dataset
     out_raster_ds = None
