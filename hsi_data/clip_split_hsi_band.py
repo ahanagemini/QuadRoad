@@ -155,7 +155,7 @@ def clip_geotiff_window(tiff_ds, box, out_f, tiff_name):
 
         # clipped tiff file name
         output_ortho_tiff_name = out_f +"".join(list(map(str,key))) + "/" + tiff_name + ".tif"
-        # print(output_ortho_tiff_name)
+        print(output_ortho_tiff_name)
 
         # translate the tiff image for a particular band specified in the bandList parameter
         out_ds = gdal.Translate(output_ortho_tiff_name , tiff_ds, projWin=reorg_box, bandList = key)
@@ -261,12 +261,15 @@ if __name__ == "__main__":
         os.mkdir(ortho_tiff_output_dir + "/123")
         os.mkdir(ortho_tiff_output_dir + "/456")
         os.mkdir(ortho_tiff_output_dir + "/78")
-
+    
+    print(ortho_tile)
     #for tiff_img in iglob(tiff_img_dir+'/**/*.tif'):
     for idx, tiff_img in enumerate(iglob(tiff_img_dir+'/*.tif')):
         tiff_name, _ = os.path.basename(tiff_img).split('.')
         #exit(0)
+        #print(tiff_name)
         if ortho_tile not in tiff_name:
+            #print(tiff_name)
             continue
 
         print(tiff_name)

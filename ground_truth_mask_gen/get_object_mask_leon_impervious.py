@@ -123,17 +123,19 @@ def draw_road_mask(tiff_img, imperv_shp, *ignore_shps):
        'UNPAVED-PARKING', 'LANDSCAPE-ISLAND', 'WATERBODY', 'TENNIS-COURT'
     ]
 
-    keep_mask_attrs = mask_attrs[:1]
+    keep_mask_attrs = mask_attrs
+    #print(keep_mask_attrs)
 
     # Fill output band with a number denoting the background
     b = out_raster_ds.GetRasterBand(1)
-    b.Fill(len(keep_mask_attrs))
+    #b.Fill(len(keep_mask_attrs))
+    b.Fill(0)
 
     # Give a number for each class
     for i, attr in enumerate(keep_mask_attrs):
         attr_filter = f"DXF_LAYER = '{attr}'"
         layer.SetAttributeFilter(attr_filter)
-        status = burn_shp_layer_to_geotiff(out_raster_ds, layer, i)
+        status = burn_shp_layer_to_geotiff(out_raster_ds, layer, i+1)
 
     # Close dataset
     out_raster_ds = None

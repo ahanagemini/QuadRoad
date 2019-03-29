@@ -4,7 +4,7 @@ import scipy.misc
 import numpy as np
 from tqdm import tqdm
 from torch.nn import BCEWithLogitsLoss
-from load_road_1c import make_data_splits
+from load_road import make_data_splits
 from torchvision import models
 from sklearn.metrics import confusion_matrix
 from torch import nn
@@ -31,7 +31,7 @@ def training_and_val(epochs, base_dir, batch_size):
 
         # Define network
     
-    model = SegNet_atrous(1,2)
+    model = SegNet_atrous(4,2)
     # model = DeepLabv3_plus(in_channels=3, num_classes=2)
 #    model.fc = nn.Linear(num_ftrs, nclass)
     optimizer = optim.SGD(model.parameters(), lr = 0.001, momentum=0.9)
@@ -40,6 +40,10 @@ def training_and_val(epochs, base_dir, batch_size):
     class_weights = FloatTensor(weights).cuda()
     #criterion = FocalLoss(weights=class_weights,gamma=1, alpha=1)
     criterion_ce = nn.CrossEntropyLoss(weight=class_weights)
+    criterion_iou = IoULoss()
+    criterion_dice = DiceLoss()
+    criterion_iou = criterion_iou.cuda()
+    criterion_dice = criterion_dice.cuda()
     criterion_ce = criterion_ce.cuda()
         
         # Define lr scheduler
@@ -63,7 +67,10 @@ def training_and_val(epochs, base_dir, batch_size):
             image, target = image.cuda(), target.cuda()
             optimizer.zero_grad()
             output = model(image)
-            loss = criterion_ce(output, target)
+            loss_iou = criterion_iou(output, target)
+            loss_ce = criterion_ce(output, target)
+            loss_dice = criterion_dice(output, target)
+            loss = loss_iou + loss_ce + loss_dice
             loss.backward()
             optimizer.step()
             train_loss += loss.item()
@@ -83,7 +90,11 @@ def training_and_val(epochs, base_dir, batch_size):
             image, target = image.cuda(), target.cuda()
             with no_grad():
                 output = model(image)
-            loss = criterion_ce(output, target)
+            loss_iou = criterion_iou(output, target)
+            loss_ce = criterion_ce(output, target)
+            loss_dice = criterion_dice(output, target)
+            loss = loss_iou + loss_ce + loss_dice
+            #loss = criterion(output, target)
             test_loss += loss.item()
             pred = output.data.cpu().numpy()
             target = target.cpu().numpy()
@@ -129,18 +140,18 @@ def training_and_val(epochs, base_dir, batch_size):
             best = RMIoU[1]
             best_epoch = epoch
             #save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_best_5em0")
-            save(model.state_dict(), "/home/ahana/pytorch_road/models/SegNet_best_atrous_1c_n_iou_lr_001")
+            save(model.state_dict(), "/home/ahana/pytorch_road/models/SegNet_best_atrous_4c_n_loss_sum_lr_001")
         if epoch % 10 == 0:
             #save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_pre_atrous_5em0")
-            outfile = "/home/ahana/pytorch_road/models/SegNet_pre_atrous_1c_n_iou_lr_001_" + str(epoch)
+            outfile = "/home/ahana/pytorch_road/models/SegNet_pre_atrous_4c_n_loss_sum_lr_001_" + str(epoch)
             save(model.state_dict(), outfile)
 
         if epoch == 75:
-            outfile = "/home/ahana/pytorch_road/models/SegNet_pre_atrous_1c_n_iou_lr_001_75"
+            outfile = "/home/ahana/pytorch_road/models/SegNet_pre_atrous_4c_n_loss_sum_lr_001_75"
             save(model.state_dict(), outfile)
 
         #save(model.state_dict(), "/home/ahana/pytorch_road/model_best/SegNet_final_atrous_5em0")
-        save(model.state_dict(), "/home/ahana/pytorch_road/models/SegNet_final_atrous_1c_n_iou_lr_001")
+        save(model.state_dict(), "/home/ahana/pytorch_road/models/SegNet_final_atrous_4c_n_loss_sum_lr_001")
         ious.append(RMIoU[1])
         # Fast test during the training
         print('Validation:')
@@ -149,7 +160,7 @@ def training_and_val(epochs, base_dir, batch_size):
 
     losses1 = [(i,x) for i,x in enumerate(losses)]
     ious1 = [(i,x) for i,x in enumerate(ious)]
-    fp = open("/home/ahana/pytorch_road/result_texts/SegNet_atrous_1c_n_iou_lr_001.txt", "w")
+    fp = open("/home/ahana/pytorch_road/result_texts/SegNet_atrous_4c_n_loss_sum_lr_001.txt", "w")
     fp.write(str(losses1))
     fp.write("\n")
     fp.write(str(ious1))
@@ -158,12 +169,12 @@ def training_and_val(epochs, base_dir, batch_size):
     fp.close()
     
     plt.plot(losses)
-    plt.savefig("/home/ahana/pytorch_road/loss_graphs/loss_SegNet_atrous_1c_n_iou_lr_001.png")
+    plt.savefig("/home/ahana/pytorch_road/loss_graphs/loss_SegNet_atrous_4c_n_loss_sum_lr_001.png")
     plt.clf()
     plt.plot(ious)
     print(losses)
     print(ious)
-    plt.savefig("/home/ahana/pytorch_road/iou_graphs/iou_SegNet_atrous_1c_n_iou_lr_001.png")    
+    plt.savefig("/home/ahana/pytorch_road/iou_graphs/iou_SegNet_atrous_4c_n_loss_sum_lr_001.png")    
 
 def main():
 
