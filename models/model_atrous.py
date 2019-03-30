@@ -4,6 +4,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
 
+'''
+SegNet without deepest max pool and last 3 encoder convolution as 
+rate= 2 dilated convolution
+Uses Leaky ReLU
+'''
+
 class SegNet_atrous(nn.Module):
     def __init__(self,input_nbr,label_nbr):
         super(SegNet_atrous, self).__init__()

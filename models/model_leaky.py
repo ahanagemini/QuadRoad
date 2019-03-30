@@ -4,6 +4,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
 
+'''
+SegNet with Leaky ReLU
+'''
 class SegNet_leaky(nn.Module):
     def __init__(self,input_nbr,label_nbr):
         super(SegNet_leaky, self).__init__()

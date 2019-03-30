@@ -3,6 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
 
+'''
+SegNet model
+'''
 class SegNet(nn.Module):
     def __init__(self,input_nbr,label_nbr):
         super(SegNet, self).__init__()

@@ -4,6 +4,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
 
+'''
+SegNet model with increased depth
+'''
+
 class SegNet_deep(nn.Module):
     def __init__(self,input_nbr,label_nbr):
         super(SegNet_deep, self).__init__()
