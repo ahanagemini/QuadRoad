@@ -11,7 +11,7 @@ from torch import cat
 
 class RoadSegmentation(Dataset):
     """
-    Road dataset
+    Road dataset for 4 channels
     """
     NUM_CLASSES = 2
 
@@ -22,7 +22,6 @@ class RoadSegmentation(Dataset):
         """
         :param base_dir: path to road dataset directory
         :param split: train/val
-        :param transform: transform to apply
         """
         super().__init__()
         self._base_dir = base_dir
@@ -58,26 +57,6 @@ class RoadSegmentation(Dataset):
         # Display stats
         print('Number of images in {}: {:d}'.format(split, len(self.images)))
 
-    def transform_rgb(self, sample):
-        composed_transforms = transforms.Compose([
-            # tr.RandomHorizontalFlip(),
-            # tr.RandomScaleCrop(base_size=self.args.base_size, crop_size=self.args.crop_size),
-            # tr.RandomGaussianBlur(),
-            transforms.ToTensor()])
-            #transforms.Normalize(mean=(0.339, 0.336, 0.302), std=(0.056, 0.041, 0.021))])
-        print("Transforming")
-        return composed_transforms(sample)
-    
-    def transform_hght(self, sample):
-        composed_transforms = transforms.Compose([
-            # tr.RandomHorizontalFlip(),
-            # tr.RandomScaleCrop(base_size=self.args.base_size, crop_size=self.args.crop_size),
-            # tr.RandomGaussianBlur(),
-            transforms.ToTensor()])
-            #transforms.Normalize((0.4285),(0.197))])
-        print("Transforming")
-        return composed_transforms(sample)
-
     def __len__(self):
         return len(self.images)
 
@@ -87,15 +66,11 @@ class RoadSegmentation(Dataset):
         composed_transforms = transforms.Compose([ transforms.ToTensor()])
         _t_img = composed_transforms(_img)
         _t_hght = composed_transforms(_hght)
-        #print(_t_img.shape)
-        #print(_t_hght.shape)
         _t_imhg = cat((_t_img,_t_hght),0)
         composed_transforms = transforms.Compose([ transforms.Normalize(mean=(0.339, 0.336, 0.302, 0.4285), std=(0.056, 0.041, 0.021, 0.197))])
         _tn_imhg = composed_transforms(_t_imhg)
         _target = np.array(_target).astype(np.float32)
         _t_target = from_numpy(_target).long().view(512,512)
-        #print(_tn_imhg.shape)
-        # print(_t_target.shape)
         sample = {'image': _tn_imhg, 'label': _t_target}
 
         return sample
@@ -116,7 +91,6 @@ class RoadSegmentation(Dataset):
         _hght_padded = self._padding(_hght, 512)
         _target = Image.open(self.categories[index])
         _target_padded = self._padding(_target, 512)
-        # print(_target_padded.size)
         return _img_padded, _hght_padded, _target_padded      
 
 
