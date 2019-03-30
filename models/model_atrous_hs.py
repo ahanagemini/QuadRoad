@@ -4,9 +4,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
 
-class SegNet_atrous(nn.Module):
+class SegNet_atrous_hs(nn.Module):
     def __init__(self,input_nbr,label_nbr):
-        super(SegNet_atrous, self).__init__()
+        super(SegNet_atrous_hs, self).__init__()
 
         batchNorm_momentum = 0.1
 

@@ -8,6 +8,7 @@ from torch.nn import BCEWithLogitsLoss
 from load_road.load_road_4c import make_data_splits_4c
 from load_road.load_road_3c import make_data_splits_3c
 from load_road.load_road_1c import make_data_splits_1c
+from load_road.load_hs import make_data_splits_hs
 from torchvision import models
 from sklearn.metrics import confusion_matrix
 from torch import nn
@@ -24,6 +25,7 @@ from models.model_atrous import SegNet_atrous
 from models.DeepLabv3_plus import DeepLabv3_plus
 from models.model_leaky import SegNet_leaky
 from models.model_atrous_nl import SegNet_atrous_nl
+from models.model_atrous_hs import SegNet_atrous_hs
 from losses.losses import DiceLoss
 from losses.losses import FocalLoss
 from losses.losses import IoULoss
@@ -45,10 +47,11 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, loss
         train_loader, val_loader, test_loader, nclass = make_data_splits_3c(base_dir, batch_size=4)
     if num_channels == 1:
         train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, batch_size=4)
-
+    if num_channels == 8:
+        train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, batch_size=4)
     # Define network
     
-    model = SegNet_atrous(num_channels,num_class)
+    model = SegNet_atrous_hs(num_channels,num_class)
     optimizer = optim.SGD(model.parameters(), lr = 0.001, momentum=0.9)
             # self.criterion = nn.CrossEntropyLoss(weight=class_weights)
     weights = [0.29, 1.69]
@@ -108,7 +111,7 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, loss
             image, target = image.cuda(), target.cuda()
             with no_grad():
                 output = model(image)
-            loss = criterion_ce(output, target)
+            loss = criterion(output, target)
             test_loss += loss.item()
             pred = output.data.cpu().numpy()
             target = target.cpu().numpy()
