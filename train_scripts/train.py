@@ -29,11 +29,12 @@ from losses.losses import FocalLoss
 from losses.losses import IoULoss
 
 '''
-A code to execute train for minimization of sum of 3 losses:
+A code to execute train for minimization of a any one of 3 losses:
     cross-entropy, IoU and Soft.
     Args: num_channels, num_classes, file_prefix
           num_channels: number of input channels
           num_classes: how many classes to be predicted
+          loss_type: 'dice','IoU' or 'ce'
           file_prefix: prefix used to name the trained models and the result files
 '''
 def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, loss_type, file_prefix):

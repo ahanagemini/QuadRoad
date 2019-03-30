@@ -3,6 +3,11 @@ import sys
 from scipy import misc
 import numpy
 
+'''
+Code to find the mean and std. dev. of  number of images channel-wise
+Args: base_dir=the directory where images are stored
+      filename= a list of the file names of the images for which computation is done
+'''
 def find_mean(fname, base_dir):
 
     tiles = open(fname).read().split("\n")
