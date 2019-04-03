@@ -13,7 +13,7 @@ class RoadSegmentation(Dataset):
     """
     Road dataset for 4 channels
     """
-    NUM_CLASSES = 2
+    NUM_CLASSES = 17
 
     def __init__(self,
                  base_dir,
@@ -27,7 +27,7 @@ class RoadSegmentation(Dataset):
         self._base_dir = base_dir
         self._lidar_dir = os.path.join(self._base_dir, 'hght')
         self._image_dir = os.path.join(self._base_dir, 'rgb')
-        self._cat_dir = os.path.join(self._base_dir, 'rev_annotations')
+        self._cat_dir = os.path.join(self._base_dir, 'ground_truth_500')
 
         _splits_dir = self._base_dir
 

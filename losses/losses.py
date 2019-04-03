@@ -67,4 +67,48 @@ class IoULoss(nn.Module):
         return 1 - ((intersection + self.smooth) /
               (iflat.sum() + tflat.sum() - intersection + self.smooth))
 
+class NonBinaryDiceLoss(nn.Module):
+    def __init__(self, smooth=1.0):
+        super(NonBinaryDiceLoss, self).__init__()
+        self.smooth = smooth
+
+    def forward(self, input, target):
+        num_classes = 17
+        input = torch.sigmoid(input)
+        input = input.view(input.size(0),input.size(1),-1)  # N,C,H,W => N,C,H*W
+        input = input.transpose(1,2)    # N,C,H*W => N,H*W,C
+        input = input.contiguous().view(-1,input.size(2))   # N,H*W,C => N*H*W,C
+        target = target.view(-1) #flatten
+        #print(target.type())
+        # One-hot encode
+        target = target.reshape(target.size(0),1)
+        target = torch.zeros(len(target), 17).cuda().scatter_(1, target, 1)
+        #target = one_hot_target
+        print(target.shape)
+        print(input.shape)
+        intersection = torch.sum(input * target, dim=0)
+        denominator = torch.sum(input, dim=0) + torch.sum(target, dim=0)
+        return -1 * torch.sum(2. * intersection + self.smooth / (denominator + self.smooth))
+   
+
+class NonBinaryIoULoss(nn.Module):
+    def __init__(self, smooth=1.0):
+        super(NonBinaryIoULoss, self).__init__()
+        self.smooth = smooth
+
+    def forward(self, input, target):
+        input = torch.sigmoid(input)
+        input = input.view(input.size(0),input.size(1),-1)  # N,C,H,W => N,C,H*W
+        input = input.transpose(1,2)    # N,C,H*W => N,H*W,C
+        input = input.contiguous().view(-1,input.size(2))   # N,H*W,C => N*H*W,C
+        target = target.view(-1) # flatten
+        # one-hot encode
+        target = target.reshape(target.size(0),1)
+        #one_hot_target = (target == torch.arange(num_classes).reshape(1,num_classes)).float()
+        target = torch.zeros(len(target), 17).cuda().scatter_(1, target, 1)
+        print(target.shape)
+        print(input.shape)
+        intersection = torch.sum(input * target, dim=0)
+        denominator = torch.sum(input, dim=0) + torch.sum(target, dim=0) - intersection
+        return -1 * torch.sum(intersection + self.smooth / (denominator + self.smooth))
 

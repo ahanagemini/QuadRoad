@@ -4,6 +4,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
 
+'''
+Model for training on hyperspectral data
+'''
+
 class SegNet_atrous_hs(nn.Module):
     def __init__(self,input_nbr,label_nbr):
         super(SegNet_atrous_hs, self).__init__()
