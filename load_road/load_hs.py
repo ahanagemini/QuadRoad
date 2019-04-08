@@ -19,19 +19,27 @@ class RoadSegmentation(Dataset):
 
     def __init__(self,
                  base_dir,
+                 num_classes,
+                 cat_dir,
+                 norm,
                  split='train',
                  ):
         """
         :param base_dir: path to road dataset directory
         :param split: train/val
         :param transform: transform to apply
+        :num_classes: number of target classes
+        :cat_dir: directory that stores the labels
+        :norm: whether we use normalization or not. Values are 0 or 1.
         """
         super().__init__()
         self._base_dir = base_dir
         self._hs123_dir = os.path.join(self._base_dir, 'data_hsi_split/123')
         self._hs456_dir = os.path.join(self._base_dir, 'data_hsi_split/456')
         self._hs78_dir = os.path.join(self._base_dir, 'data_hsi_split/78')
-        self._cat_dir = os.path.join(self._base_dir, 'rev_annotations')
+        self._cat_dir = os.path.join(self._base_dir, cat_dir)
+        self._num_classes = num_classes
+        self._norm = norm
 
         _splits_dir = self._base_dir
 
@@ -85,13 +93,16 @@ class RoadSegmentation(Dataset):
         #print(_t_hs456.shape)
         #print(_t_hs78.shape)
         _t_img = cat((_t_hs123,_t_hs456,_t_hs78),0)
-        #composed_transforms = transforms.Compose([transforms.Normalize(mean=(0.339, 0.336, 0.302), std=(0.056, 0.041, 0.021))])
-        #_tn_img = composed_transforms(_t_img)
+        if self._norm == 1:
+            composed_transforms = transforms.Compose([transforms.Normalize(mean=(0.00288, 0.00402, 0.00453, 0.00249, 0.00204, 0.00333, 0.00581, 0.00410), std=(0.00053, 0.00127, 0.00199, 0.001412, 0.001489, 0.00165, 0.00308, 0.00215, 0.00261))])
+            _tn_img = composed_transforms(_t_img)
+        else:
+            _tn_img = _t_img
         _target = np.array(_target).astype(np.float32)
         _t_target = from_numpy(_target).long().view(512,512)
         #print(_t_img.shape)
         #print(_t_target.shape)
-        sample = {'image': _t_img, 'label': _t_target}
+        sample = {'image': _tn_img, 'label': _t_target}
 
         return sample
 
@@ -118,12 +129,11 @@ class RoadSegmentation(Dataset):
         return _hs123, _hs456, _hs78, _target_padded      
 
 
-def make_data_splits_hs(base_dir, batch_size=4):
-    train_set = RoadSegmentation(base_dir, split='train')
-    val_set = RoadSegmentation(base_dir, split='valid')
-    test_set = RoadSegmentation(base_dir, split='test')
-    num_class = train_set.NUM_CLASSES
-    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=False, num_workers=1)
+def make_data_splits_hs(base_dir, num_class, cat_dir, norm, batch_size=4):
+    train_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='train')
+    val_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='valid')
+    test_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='test')
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=1)
     val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=1)
     test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=1)
 

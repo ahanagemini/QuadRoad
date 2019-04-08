@@ -45,6 +45,10 @@ A code to execute train for minimization of a any one of 3 losses:
 '''
 def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, loss_type, file_prefix):
     # Define Dataloader
+    if num_class == 17:
+        cat_dir = 'ground_truth_500'
+    if num_class == 2:
+        cat_dir = 'rev_annotations'
     if num_channels == 4:
         train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, num_class, cat_dir, norm, batch_size=4)
     if num_channels == 3:
@@ -55,7 +59,7 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
         train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, num_class, cat_dir, norm, batch_size=4)
     # Define network
     
-    model = SegNet_atrous(num_channels,num_class)
+    model = SegNet_atrous_hs(num_channels,num_class)
     optimizer = optim.SGD(model.parameters(), lr = 0.001, momentum=0.9)
             # self.criterion = nn.CrossEntropyLoss(weight=class_weights)
     if num_class == 2:
