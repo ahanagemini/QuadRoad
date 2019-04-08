@@ -9,6 +9,7 @@ from load_road.load_road_3c import make_data_splits_3c
 from load_road.load_road_1c import make_data_splits_1c
 from load_road.load_road_4c import make_data_splits_4c
 from load_road.load_hs import make_data_splits_hs
+from load_road.load_road_pred import make_data_splits_p
 from torchvision import models
 from sklearn.metrics import confusion_matrix
 from torch import nn
@@ -26,7 +27,8 @@ from models.model_atrous import SegNet_atrous
 from models.DeepLabv3_plus import DeepLabv3_plus
 from models.model_atrous_nl import SegNet_atrous_nl
 from models.model_atrous_hs import SegNet_atrous_hs
-from iou import IoU
+from models.model_shallow import SegNet_shallow
+from metrics.iou import IoU
 '''
 A code to execute test for a given model:
     Args: num_channels, num_classes, model_name
@@ -45,12 +47,15 @@ def test(base_dir, batch_size, num_channels, num_class, model_name):
         train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, batch_size=4)
     if num_channels == 8:
         train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, batch_size=4)
+    if num_channels == 0: # for using with the 4 predictions
+        train_loader, val_loader, test_loader, nclass = make_data_splits_p(base_dir, batch_size=4)
+        num_channels = 4
     # List of test file names    
     with open(os.path.join(os.path.join(base_dir, 'test.txt')), "r") as f:
             lines = f.read().splitlines()    
 
     # Define and load network
-    model = SegNet_atrous_hs(num_channels, num_class)
+    model = SegNet_atrous(num_channels, num_class)
 
     model = model.cuda()
     model.load_state_dict(load("/home/ahana/pytorch_road/trained_models/"+model_name))
@@ -70,15 +75,15 @@ def test(base_dir, batch_size, num_channels, num_class, model_name):
         metric.add(pred, target)
 
         # Code to use for saving output predictions    
-        #pred = output.data.cpu().numpy()
-        #target = target.cpu().numpy()
-        #pred = np.argmax(pred, axis=1)
+        pred_save = output.data.cpu().numpy()
+        target_save = target.cpu().numpy()
+        pred_save = np.argmax(pred, axis=1)
         #for j in range(0,4):
-            #outFilepath = "/home/ahana/road_data/pred_train_4c/"+lines[i*batch_size+j]+".png"
+        #    outFilepath = "/home/ahana/road_data/pred_hs/"+lines[i*batch_size+j]+".png"
             #outFilepath_target = "/home/ahana/road_data/target_test_norm_atrous/"+str(i)+"_"+str(j)+".png"
-            #to_save = pred[j,:,:]
+        #    to_save = pred_save[j,:,:]
             #target_to_save = target[j,:,:]
-            #scipy.misc.toimage(to_save).save(outFilepath)
+        #    scipy.misc.toimage(to_save, cmin=0, cmax=255).save(outFilepath)
             #scipy.misc.toimage(target_to_save).save(outFilepath_target)
 
         #pred = output.data.cpu().numpy()

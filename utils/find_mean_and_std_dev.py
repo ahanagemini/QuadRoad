@@ -12,7 +12,7 @@ def find_mean(fname, base_dir):
 
     tiles = open(fname).read().split("\n")
     tiles = [t for t in tiles if t!= ""]
-    summation = numpy.zeros(1, dtype=numpy.float64)
+    summation = numpy.zeros(3, dtype=numpy.float64)
     for tile in tiles:
         image = misc.imread(base_dir + tile + ".png")
         image = image.astype(float)
@@ -28,7 +28,7 @@ def find_std_dev(fname, base_dir, means):
 
     tiles = open(fname).read().split("\n")
     tiles = [t for t in tiles if t!= ""]
-    std_dev = numpy.zeros(1, dtype=numpy.float64)
+    std_dev = numpy.zeros(3, dtype=numpy.float64)
     for tile in tiles:
         image = misc.imread(base_dir + tile + ".png")
         image = image.astype(float)
@@ -39,6 +39,7 @@ def find_std_dev(fname, base_dir, means):
         std_dev = std_dev + sum_var
         
     std_dev = std_dev/(250000 * len(tiles))
+    std_dev = numpy.sqrt(std_dev)
     print(std_dev)    
 
 if __name__ == "__main__":

@@ -13,22 +13,28 @@ class RoadSegmentation(Dataset):
     """
     Road dataset for 4 channels
     """
-    NUM_CLASSES = 17
 
     def __init__(self,
                  base_dir,
+                 num_classes,
+                 cat_dir,
+                 norm,
                  split='train',
                  ):
         """
         :param base_dir: path to road dataset directory
         :param split: train/val
+        :num_classes: number of target classes
+        :cat_dir: directory that stores the labels
+        :norm: whether we use normalization or not. Values are 0 or 1.
         """
         super().__init__()
         self._base_dir = base_dir
         self._lidar_dir = os.path.join(self._base_dir, 'hght')
         self._image_dir = os.path.join(self._base_dir, 'rgb')
-        self._cat_dir = os.path.join(self._base_dir, 'ground_truth_500')
-
+        self._cat_dir = os.path.join(self._base_dir, cat_dir)
+        self._norm = norm
+        self._num_classes = num_classes
         _splits_dir = self._base_dir
 
         self.im_ids = []
@@ -67,8 +73,11 @@ class RoadSegmentation(Dataset):
         _t_img = composed_transforms(_img)
         _t_hght = composed_transforms(_hght)
         _t_imhg = cat((_t_img,_t_hght),0)
-        composed_transforms = transforms.Compose([ transforms.Normalize(mean=(0.339, 0.336, 0.302, 0.4285), std=(0.056, 0.041, 0.021, 0.197))])
-        _tn_imhg = composed_transforms(_t_imhg)
+        if self._norm == 1:
+            composed_transforms = transforms.Compose([ transforms.Normalize(mean=(0.339, 0.336, 0.302, 0.4285), std=(0.237, 0.201, 0.160, 0.4436))])
+            _tn_imhg = composed_transforms(_t_imhg)
+        else:
+            _tn_imhg = _t_imhg
         _target = np.array(_target).astype(np.float32)
         _t_target = from_numpy(_target).long().view(512,512)
         sample = {'image': _tn_imhg, 'label': _t_target}
@@ -94,13 +103,13 @@ class RoadSegmentation(Dataset):
         return _img_padded, _hght_padded, _target_padded      
 
 
-def make_data_splits_4c(base_dir, batch_size=4):
-    train_set = RoadSegmentation(base_dir, split='train')
-    val_set = RoadSegmentation(base_dir, split='valid')
-    test_set = RoadSegmentation(base_dir, split='test')
-    num_class = train_set.NUM_CLASSES
+def make_data_splits_4c(base_dir, num_classes, cat_dir, norm, batch_size=4):
+    train_set = RoadSegmentation(base_dir, num_classes, cat_dir, norm, split='train')
+    val_set = RoadSegmentation(base_dir, num_classes, cat_dir, norm, split='valid')
+    test_set = RoadSegmentation(base_dir, num_classes, cat_dir, norm, split='test')
+    #num_class = train_set.NUM_CLASSES
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=1)
     val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=1)
     test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=1)
 
-    return train_loader, val_loader, test_loader, num_class
+    return train_loader, val_loader, test_loader, num_classes

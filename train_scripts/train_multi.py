@@ -35,17 +35,27 @@ A code to execute train for minimization of sum of 3 losses using multi-task app
     Args: num_channels, num_classes, file_prefix
           num_channels: number of input channels
           num_classes: how many classes to be predicted
+          norm: Whether to use normalization or not 0 or 1.
           file_prefix: prefix used to name the trained models and the result files
+          validation will not work for 17 classes and does not fit on 1080 GPU
 '''
-def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, file_prefix):
+def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, file_prefix):
     # Define Dataloader
+    if num_class == 17:
+        cat_dir = 'ground_truth_500'
+    if num_class == 2:
+        cat_dir = 'rev_annotations'
     if num_channels == 4:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, num_class, cat_dir, norm, batch_size=4)
     if num_channels == 3:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_3c(base_dir, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_3c(base_dir, num_class, cat_dir, norm, batch_size=4)
     if num_channels == 1:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, batch_size=4)
-
+        train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, num_class, cat_dir, norm, batch_size=4)
+    if num_channels == 8:
+        train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, num_class, cat_dir, norm, batch_size=4)
+    if num_channels == 0: # for using with the 4 predictions
+        train_loader, val_loader, test_loader, nclass = make_data_splits_p(base_dir, num_class, cat_dir, norm, batch_size=4)
+        num_channels = 4
     # Define network
     
     model = SegNet_atrous_multi(num_channels,num_class)
@@ -186,8 +196,9 @@ def main():
     print('Total Epoches:', epochs)
     num_channels = int(sys.argv[1])
     num_class = int(sys.argv[2])
-    file_prefix = sys.argv[3]
-    training_and_val(epochs, base_dir, batch_size, num_channels, num_class, file_prefix)
+    norm = int(sys.argv[3])
+    file_prefix = sys.argv[4]
+    training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, file_prefix)
 
 
 if __name__ == "__main__":

@@ -387,27 +387,146 @@ SegNet only on 4 channels atrous and norm leaky lr 0.001 17 classes:
 
 SegNet only on 4 channels atrous and norm leaky lr 0.001 17 classes: either needs more epochs or needs a different class balancing or higher learning rate
                            epoch 50: val=0.67713
-                                     test = 0.7764
+                                     test = 0.6849
                                      val_miou = 0.2665
                            
                            epoch 60: val= 0.7081
-                                     test = 0.7897
+                                     test = 0.7238
                                      val_miou = 0.2971
                            
                            epoch 70: val= 0.7136
-                                     test = 0.7857
+                                     test = 0.7300
                                      val_miou = 0.3054
 
                            epoch 75: val= 0.7313
-                                     test = 0.7890
+                                     test = 0.7477
                                      val_miou = 0.3227
 
                            epoch 79: val = 0.7835
-                                     test = 0.7890
+                                     test = 0.7479
                                      val_miou = 0.3883
 
                            best: epoch 68: val = 0.7265
-                                           test = 0.7890
+                                           test = 0.7422
                                            val_miou = 0.3221
+                           8:46 for each training epoch
+                           13:00 min for testing 600 batches
+
+SegNet only shallow model with 3 steps in encoder and decoder to convert 17 class pred to 2 class
+                           epoch 50: val=0.7879
+                                     test = 0.7919
+                                    
+                           
+                           epoch 60: val= 0.7863
+                                     test = 0.7903
+                                     
+                           
+                           epoch 70: val= 0.7856
+                                     test = 0.7891
+                                     
+
+                           epoch 75: val= 0.7838
+                                     test = 0.7875
+                                     
+
+                           epoch 79: val = 0.7834
+                                     test = 0.7866
+                                     
+
+                           best: epoch 50: val = 0.7879
+                                           test = 0.7919
+                                           
+                           3:18 for each training epoch
+                           1:21 min for testing 600 batches
+
+
+SegNet atrous model to convert 4 predictions to a single one
+                           epoch 50: val=0.7831
+                                     test = 0.7945
+                                    
+                           
+                           epoch 60: val= 0.7821
+                                     test = 0.7943
+                                     
+                           
+                           epoch 70: val= 0.7805
+                                     test = 0.7923
+                                     
+
+                           epoch 75: val= 0.7831
+                                     test = 0.7946
+                                     
+
+                           epoch 79: val = 0.7828
+                                     test = 0.7944
+                                     
+
+                           best: epoch 41: val = 0.7875
+                                           test = 0.7962
+                                           
+                           3:18 for each training epoch
+                           1:21 min for testing 600 batches
+
+Softmax average of above 4 gives 0.8165
+
+                           best: epoch 73: val = 0.7816
+                                           test = 0.7886
+                                 final : val = 0.7807
+                                         test = 0.7886
+
+SegNet only on 4 channels atrous and norm leaky lr 0.001 correct normalization:
+                           epoch 50: val=0.7786
+                                     test = 0.7955
+
+
+                           epoch 60: val= 0.7872
+                                     test = 0.7990
+
+
+                           epoch 70: val= 0.7889
+                                     test = 0.8027
+                                   
+
+                           epoch 75: val= 0.7891
+                                     test = 0.7965
+                                     
+
+                           epoch 79: val = 0.7851
+                                     test = 0.8000
+
+
+
+                           best: epoch 73: val = 0.7916
+                                           test = 0.8001
+                                           
+                           8:46 for each training epoch
+                           13:00 min for testing 600 batches
+
+
+SegNet only on 3 channels atrous and norm leaky lr 0.001 correct normalization:
+                           epoch 50: val=0.7763
+                                     test = 0.7865
+
+
+                           epoch 60: val= 0.7775
+                                     test = 0.7864
+
+
+                           epoch 70: val= 0.7808
+                                     test = 0.7876
+                                   
+
+                           epoch 75: val= 0.7783
+                                     test = 0.7869
+                                     
+
+                           epoch 79: val = 0.7851
+                                     test = 0.7806
+
+
+
+                           best: epoch 72: val = 0.7816
+                                           test = 0.7889
+                                           
                            8:46 for each training epoch
                            13:00 min for testing 600 batches

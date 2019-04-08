@@ -40,6 +40,7 @@ def find_std_dev(fname, base_dir, means):
         std_dev = std_dev + sum_var
         
     std_dev = std_dev/(36864 * len(tiles))
+    std_dev = numpy.sqrt(std_dev)
     print(std_dev)    
 
 if __name__ == "__main__":
