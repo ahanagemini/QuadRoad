@@ -31,21 +31,31 @@ A code to execute tests using 3 models for 3 losses and give the softmax sum max
     Args: num_channels, num_classes, model_name_ce, model_name_dice, model_name_iou
           num_channels: number of input channels
           num_classes: how many classes to be predicted
+          cat_dir: directory that contains the targets
+          norm: normalize or not. 0 or 1.
           model_name_ce: name of trained model to load for cross entropy
           model_name_dice: name of trained model to load for dice
           model_name_iou: name of trained model to load for iou
 '''
 
-def test(base_dir, batch_size, num_channels, num_class, model_name_ce, model_name_dice, model_name_iou):
+def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name_ce, model_name_dice, model_name_iou):
     # Define Dataloader
+    if num_class == 17:
+        cat_dir = 'ground_truth_500'
+    if num_class == 2:
+        cat_dir = 'rev_annotations'
     if num_channels == 4:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, num_class, cat_dir, norm, batch_size=4)
     if num_channels == 3:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_3c(base_dir, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_3c(base_dir, num_class, cat_dir, norm, batch_size=4)
     if num_channels == 1:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, num_class, cat_dir, norm, batch_size=4)
     # List of test file names
-
+    if num_channels == 8:
+        train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, num_class, cat_dir, norm, batch_size=4)
+    if num_channels == 0: # for using with the 4 predictions
+        train_loader, val_loader, test_loader, nclass = make_data_splits_p(base_dir, num_class, cat_dir, norm, batch_size=4)
+        num_channels = 4
     # List test file names
     with open(os.path.join(os.path.join(base_dir, 'test.txt')), "r") as f:
             lines = f.read().splitlines()    
@@ -114,10 +124,12 @@ def main():
     batch_size = 4
     num_channels = int(sys.argv[1])
     num_class = int(sys.argv[2])
-    model_name_ce = sys.argv[3]
-    model_name_dice = sys.argv[4]
-    model_name_iou = sys.argv[5]
-    test(base_dir, batch_size, num_channels, num_class, model_name_ce, model_name_dice, model_name_iou)
+    cat_dir = sys.argv[3]
+    norm = int(sys.argv[4])
+    model_name_ce = sys.argv[5]
+    model_name_dice = sys.argv[6]
+    model_name_iou = sys.argv[7]
+    test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name_ce, model_name_dice, model_name_iou)
 
 
 if __name__ == "__main__":

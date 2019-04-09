@@ -58,8 +58,11 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
     if num_channels == 8:
         train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, num_class, cat_dir, norm, batch_size=4)
     # Define network
-    
-    model = SegNet_atrous_hs(num_channels,num_class)
+    if num_channels == 8: 
+        model = SegNet_atrous_hs(num_channels,num_class)
+    else:
+        model = SegNet_atrous(num_channels,num_class)
+
     optimizer = optim.SGD(model.parameters(), lr = 0.001, momentum=0.9)
             # self.criterion = nn.CrossEntropyLoss(weight=class_weights)
     if num_class == 2:

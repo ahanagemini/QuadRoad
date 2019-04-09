@@ -57,8 +57,11 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
         train_loader, val_loader, test_loader, nclass = make_data_splits_p(base_dir, num_class, cat_dir, norm, batch_size=4)
         num_channels = 4
     # Define network
+    if num_channels == 8:
+        model = SegNet_atrous_hs(num_channels,num_class)
+    else: 
+        model = SegNet_atrous(num_channels,num_class)
     
-    model = SegNet_atrous_multi(num_channels,num_class)
     optimizer = optim.SGD(model.parameters(), lr = 0.001, momentum=0.9)
     weights = [0.29, 1.69]
     class_weights = FloatTensor(weights).cuda()

@@ -133,7 +133,7 @@ def make_data_splits_hs(base_dir, num_class, cat_dir, norm, batch_size=4):
     train_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='train')
     val_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='valid')
     test_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='test')
-    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=1)
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=False, num_workers=1)
     val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=1)
     test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=1)
 

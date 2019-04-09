@@ -8,6 +8,7 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 from torch import from_numpy
 from torch import cat
+from torch import max as tmax
 
 class RoadSegmentation(Dataset):
     """
@@ -66,11 +67,14 @@ class RoadSegmentation(Dataset):
         _img, _target = self._make_img_gt_point_pair(index)
         composed_transforms = transforms.Compose([ transforms.ToTensor()])
         _t_img = composed_transforms(_img)
+        #print(tmax(_t_img))
         if self._norm == 1:
             composed_transforms = transforms.Compose([transforms.Normalize(mean=(0.339, 0.336, 0.302), std=(0.237, 0.201, 0.160))])
             _tn_img = composed_transforms(_t_img)
         else:
             _tn_img = _t_img
+        #print(tmax(_t_img))
+        #print(tmax(_tn_img))
         _target = np.array(_target).astype(np.float32)
         _t_target = from_numpy(_target).long().view(512,512)
         sample = {'image': _tn_img, 'label': _t_target}
@@ -99,7 +103,7 @@ def make_data_splits_3c(base_dir, num_class, cat_dir, norm, batch_size=4):
     train_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='train')
     val_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='valid')
     test_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='test')
-    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=1)
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=False, num_workers=1)
     val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=1)
     test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=1)
 
