@@ -46,15 +46,15 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
     if num_class == 2:
         cat_dir = 'rev_annotations'
     if num_channels == 4:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, num_class, cat_dir, norm, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
     if num_channels == 3:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_3c(base_dir, num_class, cat_dir, norm, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_3c(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
     if num_channels == 1:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, num_class, cat_dir, norm, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
     if num_channels == 8:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, num_class, cat_dir, norm, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
     if num_channels == 0: # for using with the 4 predictions
-        train_loader, val_loader, test_loader, nclass = make_data_splits_p(base_dir, num_class, cat_dir, norm, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_p(base_dir, batch_size=4)
         num_channels = 4
     # List of test file names    
     if split == 'train':

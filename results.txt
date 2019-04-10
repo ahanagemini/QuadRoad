@@ -530,3 +530,30 @@ SegNet only on 3 channels atrous and norm leaky lr 0.001 correct normalization:
                                            
                            8:46 for each training epoch
                            13:00 min for testing 600 batches
+
+SegNet only on 8 hyperspectral channels atrous and norm leaky lr 0.001 correct normalization shuffle=false for train:
+                           epoch 50: val=0.7010
+                                     test = 0.7148
+
+                           epoch 60: val= 0.7091
+                                     test = 0.7221
+
+
+                           epoch 70: val= 0.7124
+                                     test = 0.7271
+                                   
+
+                           epoch 75: val= 0.7100
+                                     test = 0.7211
+                                     
+
+                           epoch 79: val = 0.7121
+                                     test = 0.7258
+
+
+
+                           best: epoch 71: val = 0.7124
+                                           test = 0.7288
+                                           
+                           8:46 for each training epoch
+                           13:00 min for testing 600 batches

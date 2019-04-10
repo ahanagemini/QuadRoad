@@ -103,12 +103,16 @@ class RoadSegmentation(Dataset):
         return _img_padded, _hght_padded, _target_padded      
 
 
-def make_data_splits_4c(base_dir, num_classes, cat_dir, norm, batch_size=4):
+def make_data_splits_4c(base_dir, num_class=2, cat_dir='rev_annotations', norm=0, purpose='train', batch_size=4):
     train_set = RoadSegmentation(base_dir, num_classes, cat_dir, norm, split='train')
     val_set = RoadSegmentation(base_dir, num_classes, cat_dir, norm, split='valid')
     test_set = RoadSegmentation(base_dir, num_classes, cat_dir, norm, split='test')
     #num_class = train_set.NUM_CLASSES
-    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=1)
+    if purpose == 'train':
+        train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=1)
+    else:
+        train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=False, num_workers=1)
+    
     val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=1)
     test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=1)
 

@@ -50,16 +50,18 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
     if num_class == 2:
         cat_dir = 'rev_annotations'
     if num_channels == 4:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, num_class, cat_dir, norm, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
     if num_channels == 3:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_3c(base_dir, num_class, cat_dir, norm, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_3c(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
     if num_channels == 1:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, num_class, cat_dir, norm, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
     if num_channels == 8:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, num_class, cat_dir, norm, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
     # Define network
     if num_channels == 8: 
         model = SegNet_atrous_hs(num_channels,num_class)
+    else if model == 'shallow':
+        model = SegNet_shallow(num_channels, num_class)
     else:
         model = SegNet_atrous(num_channels,num_class)
 
@@ -191,7 +193,7 @@ def main():
     file_prefix = sys.argv[5]
     print('Starting Epoch: 0')
     print('Total Epoches:', epochs)
-    training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, loss_type, file_prefix)
+    training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, loss_type, file_prefix, model='atrous')
 
 
 if __name__ == "__main__":

@@ -34,35 +34,58 @@ A code to execute test for a given model:
     Args: num_channels, num_classes, model_name
           num_channels: number of input channels
           num_classes: how many classes to be predicted
+          cat_dir: directory that has the labels
+          norm: whether to use normalize or not. 0 or 1.
           model_name: name of trained model to load
+          split: train, val, test
 '''
 
-def test(base_dir, batch_size, num_channels, num_class, model_name):
+def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name, split):
     # Define Dataloader
+    if num_class == 17:
+        cat_dir = 'ground_truth_500'
+    if num_class == 2:
+        cat_dir = 'rev_annotations'
     if num_channels == 4:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
     if num_channels == 3:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_3c(base_dir, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_3c(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
     if num_channels == 1:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
     if num_channels == 8:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
     if num_channels == 0: # for using with the 4 predictions
         train_loader, val_loader, test_loader, nclass = make_data_splits_p(base_dir, batch_size=4)
         num_channels = 4
-    # List of test file names    
-    with open(os.path.join(os.path.join(base_dir, 'test.txt')), "r") as f:
+    # List of test file names
+    if split == 'train':
+        with open(os.path.join(os.path.join(base_dir, 'train.txt')), "r") as f:
             lines = f.read().splitlines()    
-
+    if split == 'val':
+        with open(os.path.join(os.path.join(base_dir, 'valid.txt')), "r") as f:
+            lines = f.read().splitlines()
+    if split == 'test':
+        with open(os.path.join(os.path.join(base_dir, 'test.txt')), "r") as f:
+            lines = f.read().splitlines()
     # Define and load network
-    model = SegNet_atrous(num_channels, num_class)
+    if num_channels == 8:
+        model = SegNet_atrous_hs(num_channels, num_class)
+    else if model == 'shallow':
+        model = SegNet_shallow(num_channels, num_class)
+    else:
+        model = SegNet_atrous(num_channels, num_class)
 
     model = model.cuda()
     model.load_state_dict(load("/home/ahana/pytorch_road/trained_models/"+model_name))
     # Start tests
     model.eval()
-    metric = IoU(2)
-    tbar = tqdm(test_loader)
+    metric = IoU(num_class)
+    if split == 'train':
+        tbar = tqdm(train_loader)
+    if split == 'val':
+        tbar = tqdm(val_loader)
+    if split == 'test':
+        tbar = tqdm(test_loader)
     overall_confusion_matrix = None
     for i, sample in enumerate(tbar):
         image, target = sample['image'], sample['label']
@@ -74,17 +97,10 @@ def test(base_dir, batch_size, num_channels, num_class, model_name):
         target = target.cpu()
         metric.add(pred, target)
 
-        # Code to use for saving output predictions    
+        # Code to use for saving output heat maps
         pred_save = output.data.cpu().numpy()
         target_save = target.cpu().numpy()
-        pred_save = np.argmax(pred, axis=1)
-        #for j in range(0,4):
-        #    outFilepath = "/home/ahana/road_data/pred_hs/"+lines[i*batch_size+j]+".png"
-            #outFilepath_target = "/home/ahana/road_data/target_test_norm_atrous/"+str(i)+"_"+str(j)+".png"
-        #    to_save = pred_save[j,:,:]
-            #target_to_save = target[j,:,:]
-        #    scipy.misc.toimage(to_save, cmin=0, cmax=255).save(outFilepath)
-            #scipy.misc.toimage(target_to_save).save(outFilepath_target)
+        #pred_save = np.argmax(pred, axis=1)
 
         #pred = output.data.cpu().numpy()
         #target = target.cpu().numpy()
@@ -120,8 +136,11 @@ def main():
     batch_size = 4
     num_channels = int(sys.argv[1])
     num_class = int(sys.argv[2])
-    model_name = sys.argv[3]
-    test(base_dir, batch_size, num_channels, num_class, model_name)
+    cat_dir = sys.argv[3]
+    norm = int(sys.argv[4])
+    model_name = sys.argv[5]
+    split = sys.argv[6]
+    test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name, split, model='atrous')
 
 
 if __name__ == "__main__":
