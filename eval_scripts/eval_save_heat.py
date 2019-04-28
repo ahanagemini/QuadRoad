@@ -29,6 +29,8 @@ from models.model_atrous_nl import SegNet_atrous_nl
 from models.model_atrous_hs import SegNet_atrous_hs
 from models.model_shallow import SegNet_shallow
 from metrics.iou import IoU
+import numpy
+
 '''
 A code to execute test for a given model and save heat maps:
     Args: num_channels, num_classes, model_name
@@ -41,7 +43,7 @@ A code to execute test for a given model and save heat maps:
           save_dir: for saving the heeatmaps
 '''
 
-def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name, split, save_dir):
+def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name, split, save_dir, model):
     # Define Dataloader
     if num_class == 17:
         cat_dir = 'ground_truth_500'
@@ -71,6 +73,8 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
     # Define and load network
     if num_channels == 8:
         model = SegNet_atrous_hs(num_channels, num_class)
+    elif model == 'shallow':
+        model = SegNet_shallow(num_channels, num_class)
     else:
         model = SegNet_atrous(num_channels, num_class)
 
@@ -97,6 +101,8 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         metric.add(pred, target)
 
         # Code to use for saving output heat maps
+        fn = nn.LogSoftmax()
+        output = fn(output)
         pred_save = output.data.cpu().numpy()
         target_save = target.cpu().numpy()
         #pred_save = np.argmax(pred, axis=1)
@@ -104,8 +110,9 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
             outFilepath = "/home/ahana/road_data/"+save_dir+"/"+lines[i*batch_size+j]+".png"
             #outFilepath_target = "/home/ahana/road_data/target_test_norm_atrous/"+str(i)+"_"+str(j)+".png"
             to_save = pred_save[j,1,:,:]
+            #to_save = to_save
             #target_to_save = target[j,:,:]
-            scipy.misc.toimage(to_save).save(outFilepath)
+            scipy.misc.toimage(to_save, cmax=0).save(outFilepath)
             #scipy.misc.toimage(target_to_save).save(outFilepath_target)
 
         #pred = output.data.cpu().numpy()
@@ -147,7 +154,8 @@ def main():
     model_name = sys.argv[5]
     split = sys.argv[6]
     save_dir = sys.argv[7]
-    test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name, split, save_dir)
+    model = sys.argv[8]
+    test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name, split, save_dir, model)
 
 
 if __name__ == "__main__":

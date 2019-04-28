@@ -33,7 +33,6 @@ class RoadSegmentation(Dataset):
         #self.from_class = True
         self._base_dir = base_dir
         self._lidar_dir = os.path.join(self._base_dir, directory)
-        self._image_dir = os.path.join(self._base_dir, 'rgb')
         self._cat_dir = os.path.join(self._base_dir, cat_dir)
         self._num_classes = num_classes
         self._norm = norm
@@ -41,7 +40,6 @@ class RoadSegmentation(Dataset):
         _splits_dir = self._base_dir
 
         self.im_ids = []
-        self.images = []
         self.categories = []
         self.hght = []
 
@@ -50,23 +48,21 @@ class RoadSegmentation(Dataset):
             lines = f.read().splitlines()
 
         for ii, line in enumerate(lines):
-            _img = os.path.join(self._image_dir, line + ".png")
             _hght = os.path.join(self._lidar_dir, line + ".png")
             _cat = os.path.join(self._cat_dir, line + ".png")
             assert os.path.isfile(_hght)
             assert os.path.isfile(_cat)
             self.im_ids.append(line)
-            self.images.append(_img)
             self.hght.append(_hght)
             self.categories.append(_cat)
          
         assert (len(self.hght) == len(self.categories))
         # Display stats
-        print('Number of images in {}: {:d}'.format(split, len(self.images)))
+        print('Number of images in {}: {:d}'.format(split, len(self.hght)))
 
 
     def __len__(self):
-        return len(self.images)
+        return len(self.hght)
 
 
     def __getitem__(self, index,):
@@ -104,8 +100,8 @@ class RoadSegmentation(Dataset):
         return _hght_padded, _target_padded      
 
 
-def make_data_splits_1c(base_dir, num_class=2, cat_dir='rev_annotations', norm=0, purpose='train', batch_size=4, directory='hght'):
-    train_set = RoadSegmentation(directory, base_dir, num_class, cat_dir, norm, split='train')
+def make_data_splits_1c_aug(base_dir, num_class=2, cat_dir='rev_annot_augment', norm=0, purpose='train', batch_size=4, directory='hght_augment'):
+    train_set = RoadSegmentation(directory, base_dir, num_class, cat_dir, norm, split='train_aug')
     val_set = RoadSegmentation(directory, base_dir, num_class, cat_dir, norm, split='valid')
     test_set = RoadSegmentation(directory, base_dir, num_class, cat_dir, norm, split='test')
     if purpose == 'train':

@@ -88,7 +88,10 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
             output_dice = model_dice(image)
             output_iou = model_iou(image)
             #output_focal = model_focal(image)
-
+        fn = nn.Softmax2d(dim=1)
+        output_ce = fn(output_ce)
+        output_dice = fn(output_dice)
+        output_iou = fn(output_iou)
         pred_ce = output_ce.data.cpu().numpy()
         pred_dice = output_dice.data.cpu().numpy()
         pred_iou = output_iou.data.cpu().numpy()

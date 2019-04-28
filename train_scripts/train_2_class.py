@@ -9,7 +9,10 @@ from load_road.load_road_4c import make_data_splits_4c
 from load_road.load_road_3c import make_data_splits_3c
 from load_road.load_road_1c import make_data_splits_1c
 from load_road.load_hs import make_data_splits_hs
-from load_road.load_road_pred import make_data_splits_p
+from load_road.load_road_pred4 import make_data_splits_p4
+from load_road.load_road_pred2 import make_data_splits_p2
+from load_road.load_road_3c_aug import make_data_splits_3c_aug
+from load_road.load_road_1c_aug import make_data_splits_1c_aug
 from torchvision import models
 from sklearn.metrics import confusion_matrix
 from torch import nn
@@ -28,6 +31,8 @@ from models.DeepLabv3_plus import DeepLabv3_plus
 from models.model_leaky import SegNet_leaky
 from models.model_atrous_nl import SegNet_atrous_nl
 from models.model_atrous_hs import SegNet_atrous_hs
+from models.model_atrous_GN import SegNet_atrous_GN
+from models.model_atrous_GN_dropout import SegNet_atrous_GN_dropout
 from losses.losses import DiceLoss
 from losses.losses import FocalLoss
 from losses.losses import IoULoss
@@ -38,40 +43,66 @@ A code to execute train for minimization of a any one of 3 losses:
     Args: num_channels, num_classes, file_prefix
           num_channels: number of input channels
           num_classes: how many classes to be predicted
-          norm: whether to perform normalization or not. 0 or 1
+          norm: whether to perform normalization or not. 0 or 1 if 2 it indicates prediction on preds
           loss_type: 'dice','IoU' or 'ce'
           file_prefix: prefix used to name the trained models and the result files
           with >2 classes, we can use only cross entropy loss for now
           This is old file and validation only works for 2 classes. Just keeping the code around for now.
 '''
-def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, loss_type, file_prefix):
+def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, loss_type, file_prefix, model):
     # Define Dataloader
     if num_class == 17:
         cat_dir = 'ground_truth_500'
     if num_class == 2:
         cat_dir = 'rev_annotations'
+    if num_class == 2 and (num_channels == 5 or num_channels == 2):
+        cat_dir = 'rev_annot_augment'
+    train_set = 'orig'
+    #if norm == 2:
+    #    if num_channels == 4:
+    #        train_loader, val_loader, test_loader, nclass = make_data_splits_p4(base_dir, batch_size=4)
+    #    if num_channels == 3:
+    #        train_loader, val_loader, test_loader, nclass = make_data_splits_3c_aug(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
+    #else:
     if num_channels == 4:
         train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
-    if num_channels == 3:
+    elif num_channels == 3:
         train_loader, val_loader, test_loader, nclass = make_data_splits_3c(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
-    if num_channels == 1:
+    elif num_channels == 5:
+        train_loader, val_loader, test_loader, nclass = make_data_splits_3c_aug(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
+        num_channels = 3
+        train_set = 'aug'
+    elif num_channels == 2:
+        train_loader, val_loader, test_loader, nclass = make_data_splits_1c_aug(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
+        num_channels = 1
+        train_set = 'aug'
+    elif num_channels == 1:
         train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
-    if num_channels == 8:
+    elif num_channels == 8:
         train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
-    if num_channels == 0: # for using with the 4 predictions
-        train_loader, val_loader, test_loader, nclass = make_data_splits_p(base_dir, batch_size=4)
+    elif num_channels == 0: # for using with the 4 predictions
+        train_loader, val_loader, test_loader, nclass = make_data_splits_p4(base_dir, batch_size=4)
         num_channels = 4
+    else:
+        print("NUmber of channels not supported")
     # Define network
     if num_channels == 8:
         model = SegNet_atrous_hs(num_channels,num_class)
-    else if model == 'shallow':
+    elif model == 'shallow':
         model = SegNet_shallow(num_channels, num_class)
+    elif model == 'GN':
+        model = SegNet_atrous_GN(num_channels, num_class)
+    elif model == 'GN_dropout':
+        model = SegNet_atrous_GN_dropout(num_channels, num_class)
+    elif model == 'atrous':
+        model = SegNet_atrous(num_channels, num_class)
     else: 
-        model = SegNet_atrous(num_channels,num_class)
+        model = SegNet(num_channels,num_class)
  
     optimizer = optim.SGD(model.parameters(), lr = 0.001, momentum=0.9)
             # self.criterion = nn.CrossEntropyLoss(weight=class_weights)
     if num_class == 2:
+        #weights = [0.54, 6.87]
         weights = [0.29, 1.69]
         class_weights = FloatTensor(weights).cuda()
     if num_class == 17:
@@ -156,10 +187,25 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
         intersection_over_union = intersection / union.astype(np.float32)
         RMIoU = intersection/(ground_truth_set + predicted_set - intersection)
         # Save trained models
-        if RMIoU[1] > best:
-            best = RMIoU[1]
-            best_epoch = epoch
-            save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/best_"+file_prefix)
+        if train_set == 'aug':
+            if RMIoU[1] > best and epoch <= 25:
+                best = RMIoU[1]
+                best_epoch = epoch
+                save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/best_"+file_prefix+"_25")
+            if RMIoU[1] > best and epoch <= 50:
+                best = RMIoU[1]
+                best_epoch = epoch
+                save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/best_"+file_prefix+"_50")
+            if RMIoU[1] > best and epoch <= 75:
+                best = RMIoU[1]
+                best_epoch = epoch
+                save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/best_"+file_prefix+"_75") 
+        else:
+            if RMIoU[1] > best:
+                best = RMIoU[1]
+                best_epoch = epoch
+                save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/best_"+file_prefix)
+
         if epoch % 10 == 0:
             outfile = "/home/ahana/pytorch_road/trained_models/"+file_prefix+"_" + str(epoch)
             save(model.state_dict(), outfile)
@@ -167,6 +213,15 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
         if epoch == 75:
             outfile = "/home/ahana/pytorch_road/trained_models/"+file_prefix+"_75"
             save(model.state_dict(), outfile)
+        
+        if train_set == 'aug':
+            if epoch == 50:
+                outfile = "/home/ahana/pytorch_road/trained_models/"+file_prefix+"_50"
+                save(model.state_dict(), outfile)
+
+            if epoch == 25:
+                outfile = "/home/ahana/pytorch_road/trained_models/"+file_prefix+"_25"
+                save(model.state_dict(), outfile)
 
         save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/final_"+file_prefix)
         ious.append(RMIoU[1])
@@ -203,9 +258,10 @@ def main():
     norm = int(sys.argv[3])
     loss_type = sys.argv[4]
     file_prefix = sys.argv[5]
+    model = sys.argv[6]
     print('Starting Epoch: 0')
     print('Total Epoches:', epochs)
-    training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, loss_type, file_prefix, model='atrous')
+    training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, loss_type, file_prefix, model)
 
 
 if __name__ == "__main__":

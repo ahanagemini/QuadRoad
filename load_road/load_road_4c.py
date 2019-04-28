@@ -74,7 +74,8 @@ class RoadSegmentation(Dataset):
         _t_hght = composed_transforms(_hght)
         _t_imhg = cat((_t_img,_t_hght),0)
         if self._norm == 1:
-            composed_transforms = transforms.Compose([ transforms.Normalize(mean=(0.339, 0.336, 0.302, 0.4285), std=(0.237, 0.201, 0.160, 0.4436))])
+            #composed_transforms = transforms.Compose([ transforms.Normalize(mean=(0.339, 0.336, 0.302, 0.4285), std=(0.237, 0.201, 0.160, 0.4436))])
+            composed_transforms = transforms.Compose([ transforms.Normalize(mean=(0.339, 0.336, 0.302, 0.4285), std=(0.056, 0.041, 0.021, 0.197))])
             _tn_imhg = composed_transforms(_t_imhg)
         else:
             _tn_imhg = _t_imhg
@@ -104,9 +105,9 @@ class RoadSegmentation(Dataset):
 
 
 def make_data_splits_4c(base_dir, num_class=2, cat_dir='rev_annotations', norm=0, purpose='train', batch_size=4):
-    train_set = RoadSegmentation(base_dir, num_classes, cat_dir, norm, split='train')
-    val_set = RoadSegmentation(base_dir, num_classes, cat_dir, norm, split='valid')
-    test_set = RoadSegmentation(base_dir, num_classes, cat_dir, norm, split='test')
+    train_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='train')
+    val_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='valid')
+    test_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='test')
     #num_class = train_set.NUM_CLASSES
     if purpose == 'train':
         train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=1)
@@ -116,4 +117,4 @@ def make_data_splits_4c(base_dir, num_class=2, cat_dir='rev_annotations', norm=0
     val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=1)
     test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=1)
 
-    return train_loader, val_loader, test_loader, num_classes
+    return train_loader, val_loader, test_loader, num_class

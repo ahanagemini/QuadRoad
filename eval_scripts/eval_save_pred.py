@@ -8,6 +8,9 @@ from torch.nn import BCEWithLogitsLoss
 from load_road.load_road_3c import make_data_splits_3c
 from load_road.load_road_1c import make_data_splits_1c
 from load_road.load_road_4c import make_data_splits_4c
+from load_road.load_road_3c_aug import make_data_splits_3c_aug
+from load_road.load_road_1c_aug import make_data_splits_1c_aug
+from load_road.load_road_1c import make_data_splits_1c
 from load_road.load_hs import make_data_splits_hs
 from torchvision import models
 from sklearn.metrics import confusion_matrix
@@ -26,6 +29,7 @@ from models.model_atrous import SegNet_atrous
 from models.DeepLabv3_plus import DeepLabv3_plus
 from models.model_atrous_nl import SegNet_atrous_nl
 from models.model_atrous_hs import SegNet_atrous_hs
+from models.model_atrous_GN import SegNet_atrous_GN
 from metrics.iou import IoU
 '''
 A code to execute test for a given model:
@@ -39,7 +43,7 @@ A code to execute test for a given model:
           save_dir: for saving the predictions
 '''
 
-def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name, split, save_dir):
+def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name, model, split, save_dir):
     # Define Dataloader
     if num_class == 17:
         cat_dir = 'ground_truth_500'
@@ -49,8 +53,14 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
     if num_channels == 3:
         train_loader, val_loader, test_loader, nclass = make_data_splits_3c(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
+    if num_channels == 5:
+        train_loader, val_loader, test_loader, nclass = make_data_splits_3c_aug(base_dir, num_class, 'rev_annot_augment', norm, 'eval', batch_size=4)
+        num_channels = 3
     if num_channels == 1:
         train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
+    if num_channels == 2:
+        train_loader, val_loader, test_loader, nclass = make_data_splits_1c_aug(base_dir, num_class, 'rev_annot_augment', norm, 'eval', batch_size=4)
+        num_channels = 1
     if num_channels == 8:
         train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
     if num_channels == 0: # for using with the 4 predictions
@@ -66,9 +76,16 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
     if split == 'test':
         with open(os.path.join(os.path.join(base_dir, 'test.txt')), "r") as f:
             lines = f.read().splitlines()
+    if split == 'train_aug':
+        with open(os.path.join(os.path.join(base_dir, 'train_aug.txt')), "r") as f:
+            lines = f.read().splitlines()
     # Define and load network
     if num_channels == 8:
         model = SegNet_atrous_hs(num_channels, num_class)
+    elif model == 'shallow':
+        model = SegNet_shallow(num_channels, num_class)
+    elif model == 'GN':
+        model = SegNet_atrous_GN(num_channels, num_class)
     else:
         model = SegNet_atrous(num_channels, num_class)
 
@@ -83,6 +100,8 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         tbar = tqdm(val_loader)
     if split == 'test':
         tbar = tqdm(test_loader)
+    if split == 'train_aug':
+        tbar = tqdm(train_loader)
     #overall_confusion_matrix = None
     for i, sample in enumerate(tbar):
         image, target = sample['image'], sample['label']
@@ -140,9 +159,10 @@ def main():
     cat_dir = sys.argv[3]
     norm = int(sys.argv[4])
     model_name = sys.argv[5]
-    split = sys.argv[6]
-    save_dir = sys.argv[7]
-    test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name, split, save_dir)
+    model = sys.argv[6]
+    split = sys.argv[7]
+    save_dir = sys.argv[8]
+    test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name, model, split, save_dir)
 
 
 if __name__ == "__main__":

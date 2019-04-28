@@ -94,7 +94,7 @@ class RoadSegmentation(Dataset):
         #print(_t_hs78.shape)
         _t_img = cat((_t_hs123,_t_hs456,_t_hs78),0)
         if self._norm == 1:
-            composed_transforms = transforms.Compose([transforms.Normalize(mean=(0.00288, 0.00402, 0.00453, 0.00249, 0.00204, 0.00333, 0.00581, 0.00410), std=(0.00053, 0.00127, 0.00199, 0.001412, 0.001489, 0.00165, 0.00308, 0.00215, 0.00261))])
+            composed_transforms = transforms.Compose([transforms.Normalize(mean=(0.00288, 0.00402, 0.00453, 0.00249, 0.00204, 0.00333, 0.00581, 0.00410), std=(0.00053, 0.00127, 0.00199, 0.001412, 0.001489, 0.00165, 0.00308, 0.00215))])
             _tn_img = composed_transforms(_t_img)
         else:
             _tn_img = _t_img

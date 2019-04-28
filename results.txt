@@ -265,7 +265,14 @@ SegNet only on 4 channels atrous and norm leaky lr 0.001 focal loss:
                            8:46 for each training epoch
                            13:06 min for testing 600 batches
 
-Avg of 3 losses: dice, iou, cross-entropy:
+output Avg of 3 losses: dice, iou, cross-entropy:
+                           test = 0.8228
+                           18:46 min testing
+
+softmax Avg of 3 losses: dice, iou, cross-entropy:
+                           test = 0.8204
+                           18:46 min testing
+Log softmax Avg of 3 losses: dice, iou, cross-entropy:
                            test = 0.8228
                            18:46 min testing
 
@@ -306,6 +313,9 @@ SegNet only on 1 channel atrous leaky lr 0.001 cross entropy:
 
                            epoch 79: val = 0.6074
                                      test = 0.6538
+                           best: epoch 67
+                                     val=
+                                     test = 0.6633
 
 SegNet only on 8 channel atrous leaky lr 0.001 cross entropy:
 
@@ -467,12 +477,15 @@ SegNet atrous model to convert 4 predictions to a single one
                            3:18 for each training epoch
                            1:21 min for testing 600 batches
 
-Softmax average of above 4 gives 0.8165
+Output average of above 4 gives 0.8165
+Softmax average on above 4 gives: 0.8175
+Log softmax average on above 4 gives: 0.8165
 
                            best: epoch 73: val = 0.7816
                                            test = 0.7886
                                  final : val = 0.7807
                                          test = 0.7886
+
 
 SegNet only on 4 channels atrous and norm leaky lr 0.001 correct normalization:
                            epoch 50: val=0.7786
@@ -557,3 +570,168 @@ SegNet only on 8 hyperspectral channels atrous and norm leaky lr 0.001 correct n
                                            
                            8:46 for each training epoch
                            13:00 min for testing 600 batches
+
+SegNet atrous model to convert 4 predictions to a single one using rescaled output
+                           epoch 50: val=0.7937
+                                     test = 0.8068
+                                    
+                           
+                           epoch 60: val= 0.7912
+                                     test = 0.8045
+                                     
+                           
+                           epoch 70: val= 0.7939
+                                     test = 0.8067
+                                     
+
+                           epoch 75: val= 0.7942
+                                     test = 0.8065
+                                     
+
+                           epoch 79: val = 0.7938
+                                     test = 0.8059
+                                     
+
+                           best: epoch 35: val = 0.7981
+                                           test = 0.8067
+                                           
+                           3:18 for each training epoch
+                           1:21 min for testing 600 batches
+
+SegNet atrous model to convert 4 predictions to a single one using logsoftmax
+                           epoch 50: val=0.7780
+                                     test = 0.7930
+                                    
+                           
+                           epoch 60: val= 0.7717
+                                     test = 0.7888
+                                     
+                           
+                           epoch 70: val= 0.7771
+                                     test = 0.7939
+                                     
+
+                           epoch 75: val= 0.7724
+                                     test = 0.7893
+                                     
+
+                           epoch 79: val = 0.7633
+                                     test = 0.7843
+                                     
+
+                           best: epoch 13: val = 0.7880
+                                           test = 0.7983
+                                           
+                           3:18 for each training epoch
+                           1:21 min for testing 600 batches
+
+Deeplabv3+ on the outputs of final layer of rgb, hght, and hs
+             iterations: 5000 = val: 76.80
+                                test: 77.48
+             iterations: 10000 = val: 77.97
+                                 test: 80.31
+             iterations: 15000 = val: 77.24
+                                 test: 79.98
+             iterations: 20000 = val: 76.92
+                                 test: 79.75
+             iterations: 25000 = val: 76.69
+                                 test: 79.66
+             iterations: 30000 = val: 76.76
+                                 test: 79.75
+             iterations: 35000 = val: 76.75
+                                 test: 79.72
+             iterations: 40000 = val: 76.74
+                                 testZ: 0.7973
+             iterations: 45000 = val: 76.71
+                                 test: 79.69
+             iterations: 50000 = val: 76.80
+                                 test: 79.74
+
+SegNet only on 8 hyperspectral channels atrous and norm leaky lr 0.001 correct normalization shuffle=true for train:
+                           epoch 50: val=0.7438
+                                     test = 0.7499
+
+                           epoch 60: val= 0.7397
+                                     test = 0.7533
+
+
+                           epoch 70: val= 0.7385
+                                     test = 0.7507
+
+
+                           epoch 75: val= 0.7389
+                                     test = 0.7531
+
+
+                           epoch 79: val = 0.7402
+                                     test = 0.7500
+
+
+
+                           best: epoch 61: val = 0.7497
+                                           test = 0.7551
+
+                           8:46 for each training epoch
+                           13:00 min for testing 600 batches
+
+SegNet only on 3 channels atrous leaky lr 0.001 GN
+
+                           epoch 75: val= 0.7784
+                                     test = 0.7934
+
+                           epoch 79: val = 0.7793
+                                     test = 0.7942
+
+
+
+                           best: epoch 66: val = 0.7809
+                                           test = 0.7937
+                           9:46 for each training epoch
+                           14:00 min for testing 600 batches
+
+SegNet only on 3 channels atrous leaky lr 0.001 GN augment
+                           epoch 25: val = 0.7900
+                                     test = 0.8006
+
+                           epoch 50: val= 0.8059
+                                     test = 0.8155
+
+                           epoch 75: val= 0.8092
+                                     test = 0.8172
+
+                           epoch 79: val = 0.8033
+                                     test = 0.8164
+
+
+
+                           best: epoch 24: val = 0.7945
+                                           test = 0.7963
+                           best: epoch 46: val = 0.8069
+                                           test = 0.8148
+                           best: epoch 75: val = 0.8092
+                                           test = 0..8172
+                           29:10 for each training epoch
+                           13:00 min for testing 600 batches
+
+SegNet only on 1 channels atrous leaky lr 0.001 GN augment
+                           epoch 75: val= 0.6714
+                                     test = 0.7119
+
+                           epoch 79: val = 0.6741
+                                     test = 0.7141
+
+
+
+                           best: epoch 23: val = 0.6478
+                                           test = 0.6774
+                           best: epoch 34: val = 0.6728
+                                           test = 0.7106
+                           best: epoch 68: val = 0.6770
+                                           test = 0.7148
+                           29:10 for each training epoch
+                           13:00 min for testing 600 batches
+
+
+Training on tri for aug: after 50 epochs the best is epoch 2: val: .7963
+                                                              test: .8023
+Softmax on aug for hght and rgb: 0.8249
