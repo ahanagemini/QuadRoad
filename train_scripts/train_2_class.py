@@ -9,6 +9,7 @@ from load_road.load_road_4c import make_data_splits_4c
 from load_road.load_road_3c import make_data_splits_3c
 from load_road.load_road_1c import make_data_splits_1c
 from load_road.load_hs import make_data_splits_hs
+from load_road.load_hs_aug import make_data_splits_hs_aug
 from load_road.load_road_pred4 import make_data_splits_p4
 from load_road.load_road_pred2 import make_data_splits_p2
 from load_road.load_road_3c_aug import make_data_splits_3c_aug
@@ -24,6 +25,7 @@ from models.model_shallow import SegNet_shallow
 from torch import no_grad
 from torch import FloatTensor
 from torch import save
+from torch import load
 import matplotlib.pyplot as plt
 from models.model_deep import SegNet_deep
 from models.model_atrous import SegNet_atrous
@@ -33,6 +35,7 @@ from models.model_atrous_nl import SegNet_atrous_nl
 from models.model_atrous_hs import SegNet_atrous_hs
 from models.model_atrous_GN import SegNet_atrous_GN
 from models.model_atrous_GN_dropout import SegNet_atrous_GN_dropout
+from models.model_atrous_hs_GN_do import SegNet_atrous_hs_GN_dropout
 from losses.losses import DiceLoss
 from losses.losses import FocalLoss
 from losses.losses import IoULoss
@@ -49,13 +52,21 @@ A code to execute train for minimization of a any one of 3 losses:
           with >2 classes, we can use only cross entropy loss for now
           This is old file and validation only works for 2 classes. Just keeping the code around for now.
 '''
+def lr_poly(base_lr, iter, max_iter, power):
+    return base_lr*((1-float(iter)/max_iter)**(power))
+
+def adjust_learning_rate(optimizer, i_iter, num_steps):
+    """Sets the learning rate to the initial LR divided by 5 at 60th, 120th and 160th epochs"""
+    lr = lr_poly(optimizer.param_groups[0]['lr'], i_iter, num_steps, 0.9)
+    optimizer.param_groups[0]['lr'] = lr
+
 def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, loss_type, file_prefix, model):
     # Define Dataloader
     if num_class == 17:
         cat_dir = 'ground_truth_500'
     if num_class == 2:
         cat_dir = 'rev_annotations'
-    if num_class == 2 and (num_channels == 5 or num_channels == 2):
+    if num_class == 2 and (num_channels == 5 or num_channels == 2 or num_channels == 9):
         cat_dir = 'rev_annot_augment'
     train_set = 'orig'
     #if norm == 2:
@@ -80,14 +91,20 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
         train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
     elif num_channels == 8:
         train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
+    elif num_channels == 9:
+        train_loader, val_loader, test_loader, nclass = make_data_splits_hs_aug(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
+        num_channels = 8
+        train_set = 'aug'
     elif num_channels == 0: # for using with the 4 predictions
         train_loader, val_loader, test_loader, nclass = make_data_splits_p4(base_dir, batch_size=4)
         num_channels = 4
     else:
         print("NUmber of channels not supported")
     # Define network
-    if num_channels == 8:
+    if model=='hs':
         model = SegNet_atrous_hs(num_channels,num_class)
+    elif model == 'hs_GN_do':
+        model = SegNet_atrous_hs_GN_dropout(num_channels, num_class)
     elif model == 'shallow':
         model = SegNet_shallow(num_channels, num_class)
     elif model == 'GN':
@@ -96,10 +113,13 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
         model = SegNet_atrous_GN_dropout(num_channels, num_class)
     elif model == 'atrous':
         model = SegNet_atrous(num_channels, num_class)
+    elif model == 'DeepLab':
+        model = DeepLabv3_plus(num_channels, num_class)
     else: 
         model = SegNet(num_channels,num_class)
- 
+   
     optimizer = optim.SGD(model.parameters(), lr = 0.001, momentum=0.9)
+    #optimizer = optim.Adam(model.parameters(), lr = 0.001)
             # self.criterion = nn.CrossEntropyLoss(weight=class_weights)
     if num_class == 2:
         #weights = [0.54, 6.87]
@@ -116,7 +136,8 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
         criterion = FocalLoss(weights=class_weights,gamma=1, alpha=1)
     if loss_type == 'ce':
         criterion = nn.CrossEntropyLoss(weight=class_weights)
-    
+    #if loss_type == 'ce' and model == 'DeepLab':
+    #    criterion = nn.CrossEntropyLoss()
     criterion = criterion.cuda()
         
     # Define lr scheduler
@@ -125,6 +146,7 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
 
     # Using cuda
     model = model.cuda()
+    #model.load_state_dict(load("/home/ahana/pytorch_road/trained_models/best_SegNet_atrous_GN_dropout_rgb_dice_25"))
     best = 0.0
     losses = []
     ious = []
@@ -136,11 +158,14 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
         model.train()
         tbar = tqdm(train_loader)
         num_img_tr = len(train_loader)
+        print(num_img_tr)
         # Training
         for i, sample in enumerate(tbar):
             image, target = sample['image'], sample['label']
             image, target = image.cuda(), target.cuda()
             optimizer.zero_grad()
+            if model == 'DeepLab':
+                adjust_learning_rate(optimizer, i, epochs * num_img_tr)
             output = model(image)
             loss = criterion(output, target)
             loss.backward()
@@ -199,7 +224,11 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
             if RMIoU[1] > best and epoch <= 75:
                 best = RMIoU[1]
                 best_epoch = epoch
-                save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/best_"+file_prefix+"_75") 
+                save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/best_"+file_prefix+"_75")
+            if RMIoU[1] > best:
+                best = RMIoU[1]
+                best_epoch = epoch
+                save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/best_"+file_prefix)
         else:
             if RMIoU[1] > best:
                 best = RMIoU[1]

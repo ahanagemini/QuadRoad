@@ -735,3 +735,6 @@ SegNet only on 1 channels atrous leaky lr 0.001 GN augment
 Training on tri for aug: after 50 epochs the best is epoch 2: val: .7963
                                                               test: .8023
 Softmax on aug for hght and rgb: 0.8249
+
+Dropout before every max pool and max unpool: best: val 0.7880
+                                                    test 0.7976

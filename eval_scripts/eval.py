@@ -29,6 +29,7 @@ from models.model_atrous import SegNet_atrous
 from models.DeepLabv3_plus import DeepLabv3_plus
 from models.model_atrous_nl import SegNet_atrous_nl
 from models.model_atrous_hs import SegNet_atrous_hs
+from models.model_atrous_GN_dropout import SegNet_atrous_GN_dropout
 from models.model_shallow import SegNet_shallow
 from metrics.iou import IoU
 from models.model_atrous_GN import SegNet_atrous_GN
@@ -86,6 +87,8 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         model = SegNet_shallow(num_channels, num_class)
     elif model == 'GN':
         model = SegNet_atrous_GN(num_channels, num_class)
+    elif model == 'GN_dropout':
+        model = SegNet_atrous_GN_dropout(num_channels, num_class)
     else:
         model = SegNet_atrous(num_channels, num_class)
 
