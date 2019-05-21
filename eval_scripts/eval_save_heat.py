@@ -71,7 +71,7 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         with open(os.path.join(os.path.join(base_dir, 'test.txt')), "r") as f:
             lines = f.read().splitlines()
     # Define and load network
-    if num_channels == 8:
+    if model == 'hs':
         model = SegNet_atrous_hs(num_channels, num_class)
     elif model == 'shallow':
         model = SegNet_shallow(num_channels, num_class)
@@ -101,7 +101,7 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         metric.add(pred, target)
 
         # Code to use for saving output heat maps
-        fn = nn.LogSoftmax()
+        fn = nn.Softmax()
         output = fn(output)
         pred_save = output.data.cpu().numpy()
         target_save = target.cpu().numpy()
@@ -110,9 +110,12 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
             outFilepath = "/home/ahana/road_data/"+save_dir+"/"+lines[i*batch_size+j]+".png"
             #outFilepath_target = "/home/ahana/road_data/target_test_norm_atrous/"+str(i)+"_"+str(j)+".png"
             to_save = pred_save[j,1,:,:]
-            #to_save = to_save
+            to_save = to_save * 200.0
+            padded_save = to_save.astype(dtype=np.uint8)
+            unpad_save = padded_save[6:506,6:506]
+            #to_save = to_save 
             #target_to_save = target[j,:,:]
-            scipy.misc.toimage(to_save, cmax=0).save(outFilepath)
+            scipy.misc.toimage(unpad_save, cmin=0,cmax=255).save(outFilepath)
             #scipy.misc.toimage(target_to_save).save(outFilepath_target)
 
         #pred = output.data.cpu().numpy()
