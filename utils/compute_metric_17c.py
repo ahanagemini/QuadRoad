@@ -13,11 +13,13 @@ def compute_metric(fname, base_dir, gt_dir):
 
     tiles = open(fname).read().split("\n")
     tiles = [t for t in tiles if t!= ""]
-    total_intersection = [0]*16
-    total_union = [0]*16
-    total_neg = [0]*16
-    total_diff = [0]*16
-    total_gt = [0]*16
+    total_intersection = [0]*17
+    total_union = [0]*17
+    total_neg = [0]*17
+    total_diff = [0]*17
+    total_gt = [0]*17
+    spurious = [0]*17
+    missing = [0]*17
     #L=[]
     #error_pixels=[]
     #error_locs=[]
@@ -37,7 +39,7 @@ def compute_metric(fname, base_dir, gt_dir):
         #print(rgb_error.size)
         #pred = 1 -pred
         #target = 1-target
-        for label in range(1,16):
+        for label in range(1,17):
             pred_tmp = numpy.copy(pred)
             pred_tmp[pred_tmp!=label] = 0
             target_tmp = numpy.copy(target)
@@ -48,23 +50,33 @@ def compute_metric(fname, base_dir, gt_dir):
             pred_tmp[pred_tmp==17] = 0
             true_neg = numpy.count_nonzero(pred_tmp==target_tmp) - intersection
             union = diff_sum + intersection
-            total_intersection[label-1] += intersection
-            total_union[label-1] += union
-            total_neg[label-1] += true_neg
-            total_diff[label-1] += diff_sum
-            total_gt[label -1] += numpy.count_nonzero(target_tmp)
+            total_intersection[label] += intersection
+            total_union[label] += union
+            total_neg[label] += true_neg
+            total_diff[label] += diff_sum
+            total_gt[label] += numpy.count_nonzero(target_tmp)
 
-    for label in range(0,16):
-        print(total_intersection[label])
-        print(total_union[label])
-        print(total_diff[label])
-        print(total_neg[label])
-        print(total_gt[label])
+        pred_tmp = numpy.copy(pred)
+        target_tmp = numpy.copy(target)
+        target_tmp[pred!=1] = 17
+        pred_tmp[target!=1] = 17
+        for label in range(0,17):
+            spurious[label] += numpy.count_nonzero(target_tmp == label)
+            missing[label] += numpy.count_nonzero(pred_tmp == label)
+    for label in range(0,17):
+        print("Label:"+str(label))
+        print("Intersection:"+str(total_intersection[label]))
+        print("Union:"+str(total_union[label]))
+        print("Diff:"+str(total_diff[label]))
+        print("True_neg:"+str(total_neg[label]))
+        print("GT:"+str(total_gt[label]))
+        print("Spurious road:"+str(spurious[label]))
+        print("Missing road:"+str(missing[label]))
         if total_union[label] > 0:
             iou = total_intersection[label]/total_union[label]
         else:
             iou = 0.0
-        print(str(label+1)+": "+ str(iou))
+        print("IoU: "+ str(iou))
         #to_save = misc.toimage(target, cmin=0, cmax=255).save(save_dir+tile+".png")
     #summation = summation/(250000 * len(tiles))
     #print(summation)
