@@ -3,7 +3,7 @@ import numpy
 import sys
 import os
 
-def combine_preds(rgb_dir,hght_dir,hs_dir, file_name, save_dir):
+def combine_preds(file_name,rgb_dir,hght_dir,hs_dir, save_dir, hs_or_17c):
 
     f = open(file_name, "r")
     lines = f.read().splitlines()
@@ -13,6 +13,10 @@ def combine_preds(rgb_dir,hght_dir,hs_dir, file_name, save_dir):
         rgb = misc.imread(rgb_dir+tile+'.png')
         hght = misc.imread(hght_dir+tile+'.png')
         hs = misc.imread(hs_dir+tile+'.png')
+        if hs_or_17c == 1:
+            hs[hs==16]=3
+        elif hs_or_17c == 2:
+            hs = 200 - hs
         to_save = numpy.zeros((500, 500, 3), dtype=numpy.uint8)
         to_save[:,:,0] = rgb[0:500,0:500]
         to_save[:,:,1] = hght[0:500,0:500]
@@ -27,5 +31,6 @@ if __name__=="__main__":
     hs_dir = sys.argv[4]
     file_name = sys.argv[1]
     save_dir = sys.argv[5]
+    hs_or_17c = int(sys.argv[6])
     print(file_name)
-    combine_preds(file_name, rgb_dir,hght_dir,hs_dir,save_dir)
+    combine_preds(file_name, rgb_dir,hght_dir,hs_dir,save_dir, hs_or_17c)

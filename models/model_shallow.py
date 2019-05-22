@@ -8,6 +8,7 @@ from collections import OrderedDict
 SegNet without deepest max pool and last 3 encoder convolution as 
 rate= 2 dilated convolution
 Uses Leaky ReLU
+Shallow model for training on 17 class pred to convert to 2 class pred
 '''
 
 class SegNet_shallow(nn.Module):

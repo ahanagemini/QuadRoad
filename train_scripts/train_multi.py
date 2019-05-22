@@ -37,14 +37,11 @@ A code to execute train for minimization of sum of 3 losses using multi-task app
           num_classes: how many classes to be predicted
           norm: Whether to use normalization or not 0 or 1.
           file_prefix: prefix used to name the trained models and the result files
-          validation will not work for 17 classes and does not fit on 1080 GPU
+   Works only for 2 classes and non-augmented data
 '''
 def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, file_prefix):
     # Define Dataloader
-    if num_class == 17:
-        cat_dir = 'ground_truth_500'
-    if num_class == 2:
-        cat_dir = 'rev_annotations'
+    cat_dir = 'rev_annotations'
     if num_channels == 4:
         train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
     if num_channels == 3:

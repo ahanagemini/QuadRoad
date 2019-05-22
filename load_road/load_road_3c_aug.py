@@ -12,7 +12,7 @@ from torch import max as tmax
 
 class RoadSegmentation(Dataset):
     """
-    Road dataset for 3 channels
+    Road dataset for 3 channels either rgb data that has concatenated and saved as rgb
     """
 
     def __init__(self,
@@ -26,6 +26,13 @@ class RoadSegmentation(Dataset):
         """
         :param base_dir: path to road dataset directory
         :param split: train/val
+        :num_classes: number of target classes
+        :cat_dir: directory that stores the labels
+        :norm: whether we use normalization or not. Values are 0 or 1.
+               2 is for use with the original DeepLab tri
+        :img_dir: directory containing input images
+        :split: The data split to be used
+        :purpose: if 'train' then shuffle else do not shuffle
         """
         super().__init__()
         self._base_dir = base_dir
@@ -38,7 +45,6 @@ class RoadSegmentation(Dataset):
         self.im_ids = []
         self.images = []
         self.categories = []
-        self.hght = []
 
         print(os.path.join(os.path.join(_splits_dir, split + '.txt')))
         with open(os.path.join(os.path.join(_splits_dir, split + '.txt')), "r") as f:

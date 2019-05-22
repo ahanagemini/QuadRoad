@@ -31,16 +31,22 @@ from models.model_atrous_nl import SegNet_atrous_nl
 from models.model_atrous_hs import SegNet_atrous_hs
 from models.model_atrous_GN import SegNet_atrous_GN
 from metrics.iou import IoU
+
 '''
-A code to execute test for a given model:
+A code to execute test and save preds for a given model:
     Args: num_channels, num_classes, model_name
-          num_channels: number of input channels
+          num_channels: number of input channels, also used to indicate augmented data.
+                        0 for the model that uses 3 predictions
+                        5 for 3 channel augmented
+                        2 for 1 channel augmented
+                        9 for 8 channel augmented
           num_classes: how many classes to be predicted
-          cat_dir: directory that stores targets
-          norm: normalize or not. 1 or 0.
+          cat_dir: directory that has the labels
+          norm: whether to use normalize or not. 0 or 1.
           model_name: name of trained model to load
-          split: train, val or test
-          save_dir: for saving the predictions
+          split: train, val, test
+          model: model type: whether it uses GN or BN, uses dropout or not, and for how many channels
+                 refer to models directory for morew info on different models
 '''
 
 def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name, model, split, save_dir):
@@ -80,13 +86,15 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         with open(os.path.join(os.path.join(base_dir, 'train_aug.txt')), "r") as f:
             lines = f.read().splitlines()
     # Define and load network
-    if num_channels == 8:
+    if model == 'hs': #hyperspectral with dropout
         model = SegNet_atrous_hs(num_channels, num_class)
     elif model == 'shallow':
         model = SegNet_shallow(num_channels, num_class)
     elif model == 'GN':
         model = SegNet_atrous_GN(num_channels, num_class)
-    else:
+    elif model == 'GN_dropout':
+        model = SegNet_atrous_GN_dropout(num_channels, num_class)
+    else: # no GN or dropout
         model = SegNet_atrous(num_channels, num_class)
 
     model = model.cuda()
@@ -115,37 +123,17 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         pred_save = np.argmax(pred_save, axis=1)
         for j in range(0,4):
             outFilepath = "/home/ahana/road_data/"+save_dir+"/"+lines[i*batch_size+j]+".png"
-        #    outFilepath_target = "/home/ahana/road_data/target_test_4c_17/"+lines[i*batch_size+j]+".png"
             to_save = pred_save[j,:,:]
-        #    target_to_save = target_save[j,:,:]
             scipy.misc.toimage(to_save,cmin=0, cmax=255).save(outFilepath)
-        #    scipy.misc.toimage(target_to_save).save(outFilepath_target)
 
-        #pred = output.data.cpu().numpy()
-        #target = target.cpu().numpy()
-        #pred = np.argmax(pred, axis=1)
         pred = output.data.cpu()
         target = target.cpu()
         metric.add(pred, target)
-        #target_f = target.flatten()
-        #pred_f = pred.flatten()
-        #current_confusion_matrix = confusion_matrix(y_true=target_f, y_pred=pred_f, labels=[0, 1])
-
-        #if overall_confusion_matrix is not None:
-        #    overall_confusion_matrix += current_confusion_matrix
-        #else:
-        #    overall_confusion_matrix = current_confusion_matrix
-
-
-        #intersection = overall_confusion_matrix[1][1]
-        #ground_truth_set = overall_confusion_matrix.sum(axis=1)
-        #predicted_set = overall_confusion_matrix.sum(axis=0)
-        #union =  overall_confusion_matrix[0][1] + overall_confusion_matrix[1][0]
-
-        #intersection_over_union = intersection / union.astype(np.float32)
-        #RMIoU = intersection/(ground_truth_set + predicted_set - intersection) 
+    
     iou, miou = metric.value()
-    miou = (miou*17 - iou[0])/16
+    if num_class == 17
+        miou = (miou*17 - iou[0])/16
+    
     print('Test:')
     print("IoU: {}, MIoU: {}, RMIoU: {}".format(iou, miou, iou[1]))
     metric.reset()

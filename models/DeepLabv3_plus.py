@@ -4,6 +4,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
 
+'''
+ Code to implement the DeepLabv3+ model in Pytorch.
+ Does not achieve good accuracy
+ '''
 
 class SeperableConv2D(nn.Module):
     def __init__(self, in_dims, out_dims, kernel_size=3, stride=1, padding=0, dilation=1, bias=False):

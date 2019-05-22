@@ -33,7 +33,7 @@ from losses.losses import NonBinaryIoULoss
 from losses.losses import NonBinaryDiceLoss
 from metrics.iou import IoU
 '''
-A code to execute train for minimization of a any one of 3 losses:
+A code to execute train for minimization of any one of 3 losses:
     cross-entropy, IoU and Soft.
     Args: num_channels, num_classes, file_prefix
           num_channels: number of input channels
@@ -42,13 +42,14 @@ A code to execute train for minimization of a any one of 3 losses:
           loss_type: 'dice','IoU' or 'ce'
           file_prefix: prefix used to name the trained models and the result files
           This one should work for both 17 and 2 classes but for 17 classes only cross-entropy loss is valid
+          Old code that does not work for augmented data. Just keeping it around for now.
 '''
 def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, loss_type, file_prefix):
     # Define Dataloader
     if num_class == 17:
-        cat_dir = 'ground_truth_500'
+        cat_dir = 'gt_augment'
     if num_class == 2:
-        cat_dir = 'rev_annotations'
+        cat_dir = 'rev_annot_augment'
     if num_channels == 4:
         train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
     if num_channels == 3:

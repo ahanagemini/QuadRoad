@@ -35,14 +35,11 @@ A code to execute train for minimization of sum of 3 losses:
           num_classes: how many classes to be predicted
           norm: Whether to normalize or not. 0 or 1.
           file_prefix: prefix used to name the trained models and the result files
-          validation will not work for 17 classes
+    Used only for 2 classes and non-augmented data as those tests showed unsatisfactory results
 '''          
 def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, file_prefix):
         # Define Dataloader
-    if num_class == 17:
-        cat_dir = 'ground_truth_500'
-    if num_class == 2:
-        cat_dir = 'rev_annotations'
+    cat_dir = 'rev_annotations'
 
     #train_loader, val_loader, test_loader, nclass = make_data_splits(base_dir, batch_size=4)
     if num_channels == 4:
@@ -64,12 +61,8 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
  
     # model = DeepLabv3_plus(in_channels=3, num_classes=2)
     optimizer = optim.SGD(model.parameters(), lr = 0.001, momentum=0.9)
-    if num_class == 2:
-        weights = [0.29, 1.69]
-        class_weights = FloatTensor(weights).cuda()
-    if num_class == 17:
-        weights = [0.0089, 0.0464, 4.715, 1.00, 0.06655, 27.692, 79.604, 0.273, 3.106, 0.305, 1, 21.071, 0.0806, 0.636, 1.439, 0.387, 10.614]
-        class_weights = FloatTensor(weights).cuda()
+    weights = [0.29, 1.69]
+    class_weights = FloatTensor(weights).cuda()
     criterion_ce = nn.CrossEntropyLoss(weight=class_weights)
     criterion_iou = IoULoss()
     criterion_dice = DiceLoss()

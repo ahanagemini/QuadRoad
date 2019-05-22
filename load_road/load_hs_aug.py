@@ -8,11 +8,12 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 from torch import from_numpy
 from torch import cat
-from torch import max as tmax
+from skimage.external import tifffile
+from torchvision_x.transforms import functional as F
 
 class RoadSegmentation(Dataset):
     """
-    Road dataset for 3 channels rgb only.
+    Road dataset: create data for augmented hs data using tif images
     """
 
     def __init__(self,
@@ -25,6 +26,7 @@ class RoadSegmentation(Dataset):
         """
         :param base_dir: path to road dataset directory
         :param split: train/val
+        :param transform: transform to apply
         :num_classes: number of target classes
         :cat_dir: directory that stores the labels
         :norm: whether we use normalization or not. Values are 0 or 1.
@@ -33,51 +35,74 @@ class RoadSegmentation(Dataset):
         """
         super().__init__()
         self._base_dir = base_dir
-        self._image_dir = os.path.join(self._base_dir, 'rgb')
+        self._hs123_dir = os.path.join(self._base_dir, 'data_hsi_split/hs_aug/123')
+        self._hs456_dir = os.path.join(self._base_dir, 'data_hsi_split/hs_aug/456')
+        self._hs78_dir = os.path.join(self._base_dir, 'data_hsi_split/hs_aug/78')
         self._cat_dir = os.path.join(self._base_dir, cat_dir)
         self._num_classes = num_classes
         self._norm = norm
+
         _splits_dir = self._base_dir
 
         self.im_ids = []
-        self.images = []
+        self.hs123 = []
         self.categories = []
+        self.hs456 = []
+        self.hs78 = []
 
         print(os.path.join(os.path.join(_splits_dir, split + '.txt')))
         with open(os.path.join(os.path.join(_splits_dir, split + '.txt')), "r") as f:
             lines = f.read().splitlines()
 
         for ii, line in enumerate(lines):
-            _image = os.path.join(self._image_dir, line + ".png")
+            _hs123 = os.path.join(self._hs123_dir, line + ".tif")
+            _hs456 = os.path.join(self._hs456_dir, line + ".tif")
+            _hs78 = os.path.join(self._hs78_dir, line + ".tif")
             _cat = os.path.join(self._cat_dir, line + ".png")
-            assert os.path.isfile(_image)
+            assert os.path.isfile(_hs123)
+            assert os.path.isfile(_hs456)
+            assert os.path.isfile(_hs78)
             assert os.path.isfile(_cat)
             self.im_ids.append(line)
-            self.images.append(_image)
+            self.hs123.append(_hs123)
+            self.hs456.append(_hs456)
+            self.hs78.append(_hs78)
             self.categories.append(_cat)
          
-        assert (len(self.images) == len(self.categories))
+        assert (len(self.hs123) == len(self.categories))
+        assert (len(self.hs456) == len(self.categories))
+        assert (len(self.hs78) == len(self.categories))
         # Display stats
-        print('Number of images in {}: {:d}'.format(split, len(self.images)))
+        print('Number of images in {}: {:d}'.format(split, len(self.hs123)))
 
     def __len__(self):
-        return len(self.images)
+        return len(self.hs123)
 
 
     def __getitem__(self, index):
-        _img, _target = self._make_img_gt_point_pair(index)
-        composed_transforms = transforms.Compose([ transforms.ToTensor()])
-        _t_img = composed_transforms(_img)
-        #print(tmax(_t_img))
+        _hs123, _hs456, _hs78, _target = self._make_img_gt_point_pair(index)
+        _hs123 = _hs123.astype(dtype=np.int32)
+        _hs456 = _hs456.astype(dtype=np.int32)
+        _hs78 = _hs78.astype(dtype=np.int32)
+        _hs78 = _hs78[:,:,:2]
+        #composed_transforms = transforms_seg.SegCompose([ transforms_seg.SegToTensor()])
+        _t_hs123 = F.to_tensor(_hs123)
+        _t_hs456 = F.to_tensor(_hs456)
+        _t_hs78 = F.to_tensor(_hs78)
+        #_t_hght = composed_transforms(_hght)
+        #print(_t_hs123.shape)
+        #print(_t_hs456.shape)
+        #print(_t_hs78.shape)
+        _t_img = cat((_t_hs123,_t_hs456,_t_hs78),0)
         if self._norm == 1:
-            composed_transforms = transforms.Compose([transforms.Normalize(mean=(0.339, 0.336, 0.302), std=(0.237, 0.201, 0.160))])
+            composed_transforms = transforms.Compose([transforms.Normalize(mean=(0.00288, 0.00402, 0.00453, 0.00249, 0.00204, 0.00333, 0.00581, 0.00410), std=(0.00053, 0.00127, 0.00199, 0.001412, 0.001489, 0.00165, 0.00308, 0.00215))])
             _tn_img = composed_transforms(_t_img)
         else:
             _tn_img = _t_img
-        #print(tmax(_t_img))
-        #print(tmax(_tn_img))
         _target = np.array(_target).astype(np.float32)
         _t_target = from_numpy(_target).long().view(512,512)
+        #print(_t_img.shape)
+        #print(_t_target.shape)
         sample = {'image': _tn_img, 'label': _t_target}
 
         return sample
@@ -92,23 +117,23 @@ class RoadSegmentation(Dataset):
         return ImageOps.expand(img, padding)
 
     def _make_img_gt_point_pair(self, index):
-        _img = Image.open(self.images[index]).convert('RGB')
-        _img_padded = self._padding(_img, 512)
+        _hs123 = tifffile.imread(self.hs123[index])
+        _hs456 = tifffile.imread(self.hs456[index])
+        _hs78 = tifffile.imread(self.hs78[index])
         _target = Image.open(self.categories[index])
         _target_padded = self._padding(_target, 512)
-        # print(_target_padded.size)
-        return _img_padded, _target_padded      
+        return _hs123, _hs456, _hs78, _target_padded      
 
 
-def make_data_splits_3c(base_dir, num_class=2, cat_dir='rev_annotations', norm=0, purpose='train', batch_size=4):
-    train_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='train')
+def make_data_splits_hs_aug(base_dir, num_class=2, cat_dir='rev_annot_augment', norm=0, purpose='train', batch_size=4):
+    train_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='train_aug')
     val_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='valid')
     test_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='test')
     if purpose == 'train':
         train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=1)
     else:
         train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=False, num_workers=1)
-   
+
     val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=1)
     test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=1)
 

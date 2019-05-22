@@ -11,9 +11,8 @@ from torch import cat
 
 class RoadSegmentation(Dataset):
     """
-    Road dataset for lidar
+    Road dataset for 1 channel
     """
-    NUM_CLASSES = 2
     def __init__(self,
                  directory,
                  base_dir,
@@ -28,6 +27,9 @@ class RoadSegmentation(Dataset):
         :num_classes: number of target classes
         :cat_dir: directory that stores the labels
         :norm: whether we use normalization or not. Values are 0 or 1.
+        :split: The data split to be used
+        :purpose: if 'train' then shuffle else do not shuffle
+        :directory: input data directory may be hght or prediction from 17 class
         """
         super().__init__()
         #self.from_class = True

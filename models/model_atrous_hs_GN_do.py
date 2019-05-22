@@ -8,12 +8,13 @@ from collections import OrderedDict
 SegNet without deepest max pool and last 3 encoder convolution as 
 rate= 2 dilated convolution
 Uses Leaky ReLU
-Uses GN not BN
+Modify SegNet for hyperspectral by replacing max-pool and unpool with upsampling in some cases
+Uses GN and dropout
 '''
 
-class SegNet_atrous_GN(nn.Module):
+class SegNet_atrous_hs_GN_dropout(nn.Module):
     def __init__(self,input_nbr,label_nbr):
-        super(SegNet_atrous_GN, self).__init__()
+        super(SegNet_atrous_hs_GN_dropout, self).__init__()
 
         batchNorm_momentum = 0.1
 
@@ -21,11 +22,13 @@ class SegNet_atrous_GN(nn.Module):
         self.gn11 = nn.GroupNorm(32, 64)
         self.conv12 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
         self.gn12 = nn.GroupNorm(32, 64)
+        self.up1 = nn.UpsamplingBilinear2d(size=(256,256))
 
         self.conv21 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
         self.gn21 = nn.GroupNorm(32, 128)
         self.conv22 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
         self.gn22 = nn.GroupNorm(32, 128)
+
 
         self.conv31 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
         self.gn31 = nn.GroupNorm(32, 256)
@@ -41,13 +44,14 @@ class SegNet_atrous_GN(nn.Module):
         self.conv43 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
         self.gn43 = nn.GroupNorm(32, 512)
 
+
         self.conv51 = nn.Conv2d(512, 512, kernel_size=3, dilation=2, padding=2)
         self.gn51 = nn.GroupNorm(32, 512)
         self.conv52 = nn.Conv2d(512, 512, kernel_size=3, dilation=2, padding=2)
         self.gn52 = nn.GroupNorm(32, 512)
         self.conv53 = nn.Conv2d(512, 512, kernel_size=3, dilation=2, padding=2)
         self.gn53 = nn.GroupNorm(32, 512)
-        
+        self.do5 = nn.Dropout(0.3)
         #self.dropout = nn.Dropout(0.3)
 
         self.conv53d = nn.Conv2d(512, 512, kernel_size=3, dilation=1, padding=1)
@@ -56,7 +60,6 @@ class SegNet_atrous_GN(nn.Module):
         self.gn52d = nn.GroupNorm(32, 512)
         self.conv51d = nn.Conv2d(512, 512, kernel_size=3, dilation=1, padding=1)
         self.gn51d = nn.GroupNorm(32, 512)
-        
 #        self.convaspp = nn.Conv2d(2048, 512, kernel_size=1, dilation=1, padding=0)
 
         self.conv43d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
@@ -78,6 +81,7 @@ class SegNet_atrous_GN(nn.Module):
         self.conv21d = nn.Conv2d(128, 64, kernel_size=3, padding=1)
         self.gn21d = nn.GroupNorm(32, 64)
 
+        self.up2 = nn.UpsamplingBilinear2d(size=(512, 512))
         self.conv12d = nn.Conv2d(64, 64, kernel_size=3, padding=1)
         self.gn12d = nn.GroupNorm(32, 64)
         self.conv11d = nn.Conv2d(64, label_nbr, kernel_size=3, padding=1)
@@ -90,8 +94,8 @@ class SegNet_atrous_GN(nn.Module):
         # Stage 1
         x11 = F.leaky_relu(self.gn11(self.conv11(x)), negative_slope=0.1)
         x12 = F.leaky_relu(self.gn12(self.conv12(x11)), negative_slope=0.1)
-        x1p, id1 = F.max_pool2d(x12,kernel_size=2, stride=2,return_indices=True)
-
+        #x1p, id1 = F.max_pool2d(x12,kernel_size=2, stride=2,return_indices=True)
+        x1p = self.up1(x12)
         # Stage 2
         x21 = F.leaky_relu(self.gn21(self.conv21(x1p)), negative_slope=0.1)
         x22 = F.leaky_relu(self.gn22(self.conv22(x21)), negative_slope=0.1)
@@ -114,14 +118,13 @@ class SegNet_atrous_GN(nn.Module):
         x52 = F.leaky_relu(self.gn52(self.conv52(x51)), negative_slope=0.1)
         x53 = F.leaky_relu(self.gn53(self.conv53(x52)), negative_slope=0.1)
 #        x5p, id5 = F.max_pool2d(x53,kernel_size=2, stride=1,return_indices=True)
-        #x5do = self.dropout(x53)
+        x53do = self.do5(x53)
       
         # Stage 5d
 #        x5d = F.max_unpool2d(x5p, id5, kernel_size=2, stride=1)
-        x53d = F.leaky_relu(self.gn53d(self.conv53d(x53)), negative_slope=0.1)
+        x53d = F.leaky_relu(self.gn53d(self.conv53d(x53do)), negative_slope=0.1)
         x52d = F.leaky_relu(self.gn52d(self.conv52d(x53d)), negative_slope=0.1)
         x51d = F.leaky_relu(self.gn51d(self.conv51d(x52d)), negative_slope=0.1)
-
         #Stage aspp
 
 #        x5cat = torch.cat((x5d, x53d, x52d, x51d), dim=1)
@@ -132,20 +135,18 @@ class SegNet_atrous_GN(nn.Module):
         x43d = F.leaky_relu(self.gn43d(self.conv43d(x4d)), negative_slope=0.1)
         x42d = F.leaky_relu(self.gn42d(self.conv42d(x43d)), negative_slope=0.1)
         x41d = F.leaky_relu(self.gn41d(self.conv41d(x42d)), negative_slope=0.1)
-
         # Stage 3d
         x3d = F.max_unpool2d(x41d, id3, kernel_size=2, stride=2)
         x33d = F.leaky_relu(self.gn33d(self.conv33d(x3d)), negative_slope=0.1)
         x32d = F.leaky_relu(self.gn32d(self.conv32d(x33d)), negative_slope=0.1)
         x31d = F.leaky_relu(self.gn31d(self.conv31d(x32d)), negative_slope=0.1)
-
         # Stage 2d
         x2d = F.max_unpool2d(x31d, id2, kernel_size=2, stride=2)
         x22d = F.leaky_relu(self.gn22d(self.conv22d(x2d)), negative_slope=0.1)
         x21d = F.leaky_relu(self.gn21d(self.conv21d(x22d)), negative_slope=0.1)
-
         # Stage 1d
-        x1d = F.max_unpool2d(x21d, id1, kernel_size=2, stride=2)
+        #x1d = F.max_unpool2d(x21d, id1, kernel_size=2, stride=2)
+        x1d = self.up2(x21d)
         x12d = F.leaky_relu(self.gn12d(self.conv12d(x1d)), negative_slope=0.1)
         x11d = self.conv11d(x12d)
 

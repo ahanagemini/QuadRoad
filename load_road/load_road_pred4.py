@@ -11,10 +11,9 @@ from torch import cat
 
 class RoadSegmentation(Dataset):
     """
-    Road dataset for 4 channels
+    Road dataset for 4 predictions from rgb, hght, hs and shallow 17class to 2 class models
+    Load 4 channels from 4 different sources
     """
-    NUM_CLASSES = 2
-
     def __init__(self,
                  base_dir,
                  split='train',
@@ -22,6 +21,12 @@ class RoadSegmentation(Dataset):
         """
         :param base_dir: path to road dataset directory
         :param split: train/val
+        :num_classes: number of target classes
+        :cat_dir: directory that stores the labels
+        :norm: whether we use normalization or not. Values are 0 or 1.
+        :split: The data split to be used
+        :purpose: if 'train' then shuffle else do not shuffle
+
         """
         super().__init__()
         self._base_dir = base_dir

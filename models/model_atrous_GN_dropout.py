@@ -8,6 +8,7 @@ from collections import OrderedDict
 SegNet without deepest max pool and last 3 encoder convolution as 
 rate= 2 dilated convolution
 Uses Leaky ReLU
+Uses GN not BN and dropout
 '''
 
 class SegNet_atrous_GN_dropout(nn.Module):

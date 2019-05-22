@@ -21,26 +21,24 @@ from torch import FloatTensor
 from torch import save
 from torch import load
 import matplotlib.pyplot as plt
-from models.model_atrous_multi import SegNet_atrous_multi
+from models.model_atrous import SegNet_atrous
 from models.DeepLabv3_plus import DeepLabv3_plus
 from models.model_atrous_nl import SegNet_atrous_nl
 
 '''
-A code to execute tests using multi task model for 3 losses and give the softmax sum max as the predicted class:
+A code to execute tests using 3 models for 3 losses and give the softmax sum max as the predicted class:
     cross-entropy, IoU and Soft.
     Args: num_channels, num_classes, model_name_ce, model_name_dice, model_name_iou
-          num_channels: number of input channels, also used to indicate augmented data.
-                        0 for the model that uses 3 predictions
-                        5 for 3 channel augmented
-                        2 for 1 channel augmented
+          num_channels: number of input channels
           num_classes: how many classes to be predicted
-          cat_dir: directory that has the targets
-          norm: normalize or not 0 or 1
-          model_name: name of trained model to load for cross entropy
- Code works but does not give desirable results as model is not good
+          cat_dir: directory that contains the targets
+          norm: normalize or not. 0 or 1.
+          model_name_ce: name of trained model to load for cross entropy
+          model_name_dice: name of trained model to load for dice
+          model_name_iou: name of trained model to load for iou
 '''
 
-def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name):
+def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name_ce, model_name_dice, model_name_iou):
     # Define Dataloader
     if num_class == 17:
         cat_dir = 'ground_truth_500'
@@ -63,23 +61,37 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
             lines = f.read().splitlines()    
 
     # Define and load models
-    model = SegNet_atrous_multi(num_channels, num_class)
-    model = model.cuda()
-    model.load_state_dict(load("/home/ahana/pytorch_road/trained_models/"+model_name))
-    model.eval()
-    #Perform test
+    model_ce = SegNet_atrous(num_channels, num_class)
+    model_dice = SegNet_atrous(num_channels, num_class)
+    model_iou = SegNet_atrous(num_channels, num_class)
+    model_focal = SegNet_atrous(num_channels, num_class)
+    model_ce = model_ce.cuda()
+    model_ce.load_state_dict(load("/home/ahana/pytorch_road/trained_models/"+model_name_ce))
+    model_ce.eval()
+    model_dice = model_dice.cuda()
+    model_dice.load_state_dict(load("/home/ahana/pytorch_road/trained_models/"+model_name_dice))
+    model_dice.eval()
+    model_iou = model_iou.cuda()
+    model_iou.load_state_dict(load("/home/ahana/pytorch_road/trained_models/"+model_name_iou))
+    model_iou.eval()
     #model_focal = model_focal.cuda()
     #model_focal.load_state_dict(load("/home/ahana/pytorch_road/models/SegNet_best_atrous_4c_n_focal_wt_lr_001"))
     #model_focal.eval()
+    # Perform Test
     tbar = tqdm(test_loader)
     overall_confusion_matrix = None
     for i, sample in enumerate(tbar):
         image, target = sample['image'], sample['label']
         image, target = image.cuda(), target.cuda()
         with no_grad():
-            output_ce, output_dice, output_iou = model(image)
+            output_ce = model_ce(image)
+            output_dice = model_dice(image)
+            output_iou = model_iou(image)
             #output_focal = model_focal(image)
-
+        fn = nn.Softmax2d(dim=1)
+        output_ce = fn(output_ce)
+        output_dice = fn(output_dice)
+        output_iou = fn(output_iou)
         pred_ce = output_ce.data.cpu().numpy()
         pred_dice = output_dice.data.cpu().numpy()
         pred_iou = output_iou.data.cpu().numpy()
@@ -117,8 +129,10 @@ def main():
     num_class = int(sys.argv[2])
     cat_dir = sys.argv[3]
     norm = int(sys.argv[4])
-    model_name = sys.argv[5]
-    test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name)
+    model_name_ce = sys.argv[5]
+    model_name_dice = sys.argv[6]
+    model_name_iou = sys.argv[7]
+    test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name_ce, model_name_dice, model_name_iou)
 
 
 if __name__ == "__main__":

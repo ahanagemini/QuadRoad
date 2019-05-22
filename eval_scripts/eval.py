@@ -12,6 +12,7 @@ from load_road.load_hs import make_data_splits_hs
 from load_road.load_road_pred4 import make_data_splits_p4
 from load_road.load_road_3c_aug import make_data_splits_3c_aug
 from load_road.load_road_1c_aug import make_data_splits_1c_aug
+from load_road.load_hs_aug import make_data_splits_hs_aug
 from torchvision import models
 from sklearn.metrics import confusion_matrix
 from torch import nn
@@ -36,12 +37,18 @@ from models.model_atrous_GN import SegNet_atrous_GN
 '''
 A code to execute test for a given model:
     Args: num_channels, num_classes, model_name
-          num_channels: number of input channels
+          num_channels: number of input channels, also used to indicate augmented data.
+                        0 for the model that uses 4 predictions
+                        5 for 3 channel augmented
+                        2 for 1 channel augmented
+                        9 for 8 channel augmented
           num_classes: how many classes to be predicted
           cat_dir: directory that has the labels
           norm: whether to use normalize or not. 0 or 1.
           model_name: name of trained model to load
           split: train, val, test
+          model: model type: whether it uses GN or BN, uses dropout or not, and for how many channels
+                 refer to models directory for morew info on different models
 '''
 
 def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name, split, model):
@@ -64,10 +71,13 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         num_channels = 1
     if num_channels == 8:
         train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
+    if num_channels == 9:
+        train_loader, val_loader, test_loader, nclass = make_data_splits_hs_aug(base_dir, num_class, 'rev_annot_augment', norm, 'eval', batch_size=4)
+        num_channels = 8
     if num_channels == 0: # for using with the 4 predictions
-        train_loader, val_loader, test_loader, nclass = make_data_splits_p(base_dir, batch_size=4)
+        train_loader, val_loader, test_loader, nclass = make_data_splits_p4(base_dir, batch_size=4)
         num_channels = 4
-    # List of test file names
+    # List of  file names depending on split
     if split == 'train':
         with open(os.path.join(os.path.join(base_dir, 'train.txt')), "r") as f:
             lines = f.read().splitlines()
@@ -81,15 +91,15 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         with open(os.path.join(os.path.join(base_dir, 'test.txt')), "r") as f:
             lines = f.read().splitlines()
     # Define and load network
-    if num_channels == 8:
+    if model == 'hs': #hyperspectral with dropout
         model = SegNet_atrous_hs(num_channels, num_class)
-    elif model == 'shallow':
+    elif model == 'shallow': 
         model = SegNet_shallow(num_channels, num_class)
     elif model == 'GN':
         model = SegNet_atrous_GN(num_channels, num_class)
     elif model == 'GN_dropout':
         model = SegNet_atrous_GN_dropout(num_channels, num_class)
-    else:
+    else: # no GN or dropout
         model = SegNet_atrous(num_channels, num_class)
 
     model = model.cuda()
@@ -114,10 +124,10 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         target = target.cpu()
         metric.add(pred, target)
 
-        # Code to use for saving output heat maps
+        # Code to use for removing padding
         pred_save = output.data.cpu().numpy()
         target_save = target.cpu().numpy()
-        pred_save = np.argmax(pred, axis=1)
+        pred_save = np.argmax(pred_save, axis=1)
 
         #pred = output.data.cpu().numpy()
         #target = target.cpu().numpy()
@@ -142,9 +152,11 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         intersection_over_union = intersection / union.astype(np.float32)
         RMIoU = intersection/(ground_truth_set + predicted_set - intersection) 
     
+    # This is after removing padding
     print('Test:')
     print("RMIoU: {}, Intersection: {}, Ground truth: {}, Predicted: {}".format(RMIoU, intersection, ground_truth_set, predicted_set))
     iou, miou = metric.value()
+    # Result with the padding
     print('Test:')
     print("IoU: {}, MIoU: {}".format(iou, miou))
     metric.reset()

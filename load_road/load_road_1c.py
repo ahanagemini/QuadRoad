@@ -11,9 +11,8 @@ from torch import cat
 
 class RoadSegmentation(Dataset):
     """
-    Road dataset for lidar
+    Road dataset for 1 channel
     """
-    NUM_CLASSES = 2
     def __init__(self,
                  directory,
                  base_dir,
@@ -28,6 +27,9 @@ class RoadSegmentation(Dataset):
         :num_classes: number of target classes
         :cat_dir: directory that stores the labels
         :norm: whether we use normalization or not. Values are 0 or 1.
+        :split: The data split to be used
+        :purpose: if 'train' then shuffle else do not shuffle
+        :directory: The input data directory may be hght or 17class pred
         """
         super().__init__()
         #self.from_class = True
@@ -41,7 +43,6 @@ class RoadSegmentation(Dataset):
         _splits_dir = self._base_dir
 
         self.im_ids = []
-        self.images = []
         self.categories = []
         self.hght = []
 
@@ -50,23 +51,21 @@ class RoadSegmentation(Dataset):
             lines = f.read().splitlines()
 
         for ii, line in enumerate(lines):
-            _img = os.path.join(self._image_dir, line + ".png")
             _hght = os.path.join(self._lidar_dir, line + ".png")
             _cat = os.path.join(self._cat_dir, line + ".png")
             assert os.path.isfile(_hght)
             assert os.path.isfile(_cat)
             self.im_ids.append(line)
-            self.images.append(_img)
             self.hght.append(_hght)
             self.categories.append(_cat)
          
         assert (len(self.hght) == len(self.categories))
         # Display stats
-        print('Number of images in {}: {:d}'.format(split, len(self.images)))
+        print('Number of images in {}: {:d}'.format(split, len(self.hght)))
 
 
     def __len__(self):
-        return len(self.images)
+        return len(self.hght)
 
 
     def __getitem__(self, index,):

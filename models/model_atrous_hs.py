@@ -6,6 +6,9 @@ from collections import OrderedDict
 
 '''
 Model for training on hyperspectral data
+Uses Leaky Relu and dilated conv
+Modify SegNet for hyperspectral by replacing max-pool and unpool with upsampling in some cases
+Uses GN
 '''
 
 class SegNet_atrous_hs(nn.Module):
