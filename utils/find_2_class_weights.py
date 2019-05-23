@@ -4,7 +4,7 @@ import numpy
 from scipy import misc
 
 '''
-Code to find the class weights for class balancing
+Code to find the class weights for class balancing for 2 class only
 Args: path
 '''
 def find_class_weights(path, fname):

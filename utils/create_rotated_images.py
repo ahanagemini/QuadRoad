@@ -4,9 +4,12 @@ from scipy import misc
 import numpy
 import random
 '''
-Code to find the mean and std. dev. of  number of images channel-wise
-Args: base_dir=the directory where images are stored
+Code to rotate input and ground truth images by random angle but ensure same angle for both for a tile
+Args: rgb_dir=the directory where images are stored
       filename= a list of the file names of the images for which computation is done
+      target_dir: directory for ground truth
+      save_dir: directory to save rotated rgb
+      t_save_dir: directory to save rotated target
 '''
 def save_rotated_images(fname, rgb_dir, target_dir, save_dir, t_save_dir):
 
@@ -34,15 +37,6 @@ def save_rotated_images(fname, rgb_dir, target_dir, save_dir, t_save_dir):
     #summation = summation/(250000 * len(tiles))
     #print(summation)
 
-def find_std_dev(image, means):
-
-    std_dev = numpy.zeros(3, dtype=numpy.float64)
-    dev_image = numpy.subtract(image, means)
-    var = numpy.square(dev_image)
-    sum_var = numpy.sum(var, axis=(0,1))
-    avg_var = sum_var / 250000
-    std_dev = numpy.sqrt(avg_var)
-    return std_dev    
 
 if __name__ == "__main__":
     #Input graph files

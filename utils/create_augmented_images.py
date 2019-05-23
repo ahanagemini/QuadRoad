@@ -4,9 +4,10 @@ from scipy import misc
 import numpy
 import random
 '''
-Code to find the mean and std. dev. of  number of images channel-wise
+Code to shift the intensity of each channel of rgb image by x(=[-0.1....0.1])*std_dev where x is randomly selected  
 Args: base_dir=the directory where images are stored
       filename= a list of the file names of the images for which computation is done
+      save_dir: directory to save the augmented images
 '''
 def save_shifted_image(fname, base_dir, save_dir):
 

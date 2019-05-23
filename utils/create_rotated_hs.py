@@ -5,11 +5,15 @@ import numpy
 import random
 import cv2
 
+
 '''
-Code to find the mean and std. dev. of  number of images channel-wise
-Args: base_dir=the directory where images are stored
+Code to find the rotatin angle for each tile target and rotate lidar by same amount
+Args: lidar_dir=the directory where lidar images are stored
       filename= a list of the file names of the images for which computation is done
+      target_dir: that has the target images
+      save_dir: directory to save the images
 '''
+
 def save_rotated_images(fname, rgb_dir, target_dir, save_dir):
 
     tiles = open(fname).read().split("\n")

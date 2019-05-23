@@ -4,17 +4,19 @@ from scipy import misc
 import numpy
 import random
 '''
-Code to find the mean and std. dev. of  number of images channel-wise
-Args: base_dir=the directory where images are stored
+Code to find the rotatin angle for each tile target and rotate lidar by same amount
+Args: lidar_dir=the directory where lidar images are stored
       filename= a list of the file names of the images for which computation is done
+      target_dir: that has the target images
+      save_dir: directory to save the images
 '''
-def save_rotated_images(fname, rgb_dir, target_dir, save_dir):
+def save_rotated_images(fname, lidar_dir, target_dir, save_dir):
 
     tiles = open(fname).read().split("\n")
     tiles = [t for t in tiles if t!= ""]
     #summation = numpy.zeros(3, dtype=numpy.float64)
     for tile in tiles:
-        image = misc.imread(rgb_dir + tile + ".png")
+        image = misc.imread(lidar_dir + tile + ".png")
         target = misc.imread(target_dir + tile + ".png")
         rot_target = misc.imread(target_dir + tile + "_r.png")
         #image = image.astype(float)
@@ -34,24 +36,14 @@ def save_rotated_images(fname, rgb_dir, target_dir, save_dir):
     #summation = summation/(250000 * len(tiles))
     #print(summation)
 
-def find_std_dev(image, means):
-
-    std_dev = numpy.zeros(3, dtype=numpy.float64)
-    dev_image = numpy.subtract(image, means)
-    var = numpy.square(dev_image)
-    sum_var = numpy.sum(var, axis=(0,1))
-    avg_var = sum_var / 250000
-    std_dev = numpy.sqrt(avg_var)
-    return std_dev    
-
 if __name__ == "__main__":
     #Input graph files
     
     fname = sys.argv[1]
-    rgb_dir = sys.argv[2]
+    lidar_dir = sys.argv[2]
     target_dir = sys.argv[3]
     save_dir = sys.argv[4]
     #t_save_dir = sys.argv[5]
     #means = find_mean(fname,base_dir)
     #std_devs = find_std_dev(fname, base_dir, means)
-    save_rotated_images(fname, rgb_dir, target_dir, save_dir)
+    save_rotated_images(fname, lidar_dir, target_dir, save_dir)
