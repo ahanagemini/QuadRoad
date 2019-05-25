@@ -36,6 +36,7 @@ from models.model_atrous_hs import SegNet_atrous_hs
 from models.model_atrous_GN import SegNet_atrous_GN
 from models.model_atrous_GN_dropout import SegNet_atrous_GN_dropout
 from models.model_atrous_hs_GN_do import SegNet_atrous_hs_GN_dropout
+from models.model_atrous_hs_nl import SegNet_atrous_hs_nl
 from losses.losses import DiceLoss
 from losses.losses import FocalLoss
 from losses.losses import IoULoss
@@ -111,6 +112,8 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
     # Define network
     if model=='hs':
         model = SegNet_atrous_hs(num_channels,num_class)
+    if model=='hs_nl':
+        model = SegNet_atrous_hs_nl(num_channels,num_class)
     elif model == 'hs_GN_do':
         model = SegNet_atrous_hs_GN_dropout(num_channels, num_class)
     elif model == 'shallow':
