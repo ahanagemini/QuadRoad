@@ -50,6 +50,7 @@ python3 "${WORK_DIR}"/vis.py \
   --vis_split="val" \
   --model_variant="xception_65" \
   --purpose="eval" \
+  --label_no=1 \
   --folder_name="pred_results" \
   --atrous_rates=6 \
   --atrous_rates=12 \

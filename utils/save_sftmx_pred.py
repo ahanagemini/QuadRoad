@@ -17,7 +17,17 @@ Args: res1_dir=the directory where first set of results are stored (max weight)
       res4_dir_dir: the directory where result derived from 17 class is stored, unused indicates avg of <4 sets
       w1, w2, w3, w4: weights for each result
 '''
-def compute_metric(fname, res1_dir, res2_dir, gt_dir, save_dir, percent, res3_dir, res4_dir, w1,w2,w3,w4):
+
+def save_sftmx(percent, w1,w2,w3,w4):
+
+    fname = "/home/ahana/road_data/valid.txt"
+    res1_dir = "/home/ahana/road_data/exp/eval/tf_new/rgb_aug_ce/sftmx_results/"
+    res2_dir = "/home/ahana/road_data/exp/eval/tf_new/hght_aug_ce/sftmx_results/"
+    res3_dir = "/home/ahana/road_data/exp/eval/tf_new/hs_ce/sftmx_results/"
+    res4_dir = "/home/ahana/road_data/exp/eval/tf_new/rgb_aug_17c_ce/sftmx_results1/"
+    #res4_dir = "unused"
+    save_dir = "/home/ahana/road_data/comb_results/"
+    gt_dir = "/home/ahana/road_data/annotations/"
 
     tiles = open(fname).read().split("\n")
     tiles = [t for t in tiles if t!= ""]
@@ -34,27 +44,39 @@ def compute_metric(fname, res1_dir, res2_dir, gt_dir, save_dir, percent, res3_di
             res4 = misc.imread(res4_dir + tile + ".png")
             res3 = misc.imread(res3_dir + tile + ".png")
             #hsp = 200 - hsp
-            res3 = numpy.divide(res3,w3)
-            res1 = 200 - res1 #just a nuance due to having sometimes 0 as road and sometimes reverse
-            res2 = 200 -res2
-            res1 = numpy.divide(res1,w1)
-            res2 = numpy.divide(res2,w2)
-            res4 = 200 - res4
-            res4 = nump.divide(res4,w4)
+            res1 = res1.astype(float)
+            res2 = res2.astype(float)
+            res3 = res3.astype(float)
+            res4 = res4.astype(float)
+
+            res3 = numpy.multiply(res3,w3)
+            res1 = 200.0 - res1 #just a nuance due to having sometimes 0 as road and sometimes reverse
+            res2 = 200.0 -res2
+            res1 = numpy.multiply(res1,w1)
+            res2 = numpy.multiply(res2,w2)
+            #res4 = 200.0 - res4
+            res4 = numpy.multiply(res4,w4)
         elif res3_dir != 'unused':
             print("Averaging 3")
             res3 = misc.imread(res3_dir + tile + ".png")
+            res1 = res1.astype(float)
+            res2 = res2.astype(float)
+            res3 = res3.astype(float)
+
             #hsp = 200 - hsp
-            res3 = numpy.divide(res3,w3)
-            res1 = 200 - res1 #just a nuance due to having sometimes 0 as road and sometimes reverse
-            res2 = 200 -res2
-            res1 = numpy.divide(res1,w1)
-            res2 = numpy.divide(res2,w2)
+            res3 = numpy.multiply(res3,w3)
+            res1 = 200.0 - res1 #just a nuance due to having sometimes 0 as road and sometimes reverse
+            res2 = 200.0 -res2
+            res1 = numpy.multiply(res1,w1)
+            res2 = numpy.multiply(res2,w2)
         else:
-            res1 = 200 - res1
-            res2 = 200 - res2
-            res1 = numpy.divide(res1,w1)
-            res2 = numpy.divide(res2,w2)
+            res1 = res1.astype(float)
+            res2 = res2.astype(float)
+            res1 = 200.0 - res1
+            res2 = 200.0 - res2
+
+            res1 = numpy.multiply(res1,w1)
+            res2 = numpy.multiply(res2,w2)
         
         target = misc.imread(gt_dir + tile + ".png")
         if res4_dir != 'unused':
@@ -67,7 +89,7 @@ def compute_metric(fname, res1_dir, res2_dir, gt_dir, save_dir, percent, res3_di
         else:
             combp = numpy.add(rgbp,hghtp)
         
-        rev_combp = 200 - combp
+        rev_combp = 200.0 - combp
         if save_dir != 'unused':
             misc.toimage(rev_combp, cmin=0, cmax=255).save(save_dir+"sftmx_results/"+tile+".png")
         
@@ -101,18 +123,18 @@ def compute_metric(fname, res1_dir, res2_dir, gt_dir, save_dir, percent, res3_di
 if __name__ == "__main__":
     #Input graph files
     
-    fname = sys.argv[1]
-    res1_dir = sys.argv[2]
-    save_dir = sys.argv[5]
-    gt_dir = sys.argv[4]
-    res2_dir = sys.argv[3]
-    percent = int(sys.argv[6])
-    res3_dir = sys.argv[7]
-    res4_dir = sys.argv[8]
-    w1 = int(sys.argv[9])
-    w2 = int(sys.argv[10])
-    w3 = int(sys.argv[11])
-    w4 = int(sys.argv[12])
+    #fname = sys.argv[1]
+    #res1_dir = sys.argv[2]
+    #save_dir = sys.argv[12]
+    #gt_dir = sys.argv[7]
+    #res2_dir = sys.argv[3]
+    percent = float(sys.argv[1])
+    #res3_dir = sys.argv[4]
+    #res4_dir = sys.argv[5]
+    w1 = float(sys.argv[2])
+    w2 = float(sys.argv[3])
+    w3 = float(sys.argv[4])
+    w4 = float(sys.argv[5])
     #means = find_mean(fname,base_dir)
     #std_devs = find_std_dev(fname, base_dir, means)
-    compute_metric(fname, res1_dir, res2_dir, gt_dir, save_dir, percent, res3_dir, res4_dir, w1, w2, w3, w4)
+    save_sftmx(percent, w1, w2, w3, w4)
