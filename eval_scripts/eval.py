@@ -35,6 +35,8 @@ from models.model_shallow import SegNet_shallow
 from metrics.iou import IoU
 from models.model_atrous_GN import SegNet_atrous_GN
 from models.model_atrous_hs_GN_do import SegNet_atrous_hs_GN_dropout
+from models.model_atrous_hs_nl import SegNet_atrous_hs_nl
+
 '''
 A code to execute test for a given model:
     Args: num_channels, num_classes, model_name
@@ -96,6 +98,8 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         model = SegNet_atrous_hs(num_channels, num_class)
     elif model == 'hs_GN_do':
         model = SegNet_atrous_hs_GN_dropout(num_channels, num_class)
+    elif model=='hs_nl':
+        model = SegNet_atrous_hs_nl(num_channels,num_class)
     elif model == 'shallow': 
         model = SegNet_shallow(num_channels, num_class)
     elif model == 'GN':

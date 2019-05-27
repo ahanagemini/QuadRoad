@@ -27,7 +27,7 @@ def compute_metric(params, fname="/home/ahana/road_data/valid.txt"):
     '''
     
     #fname = "/home/ahana/road_data/valid.txt"
-    res1_dir = "/home/ahana/road_data/exp/eval/tf_new/rgb_aug_avg/sftmx_results/"
+    res1_dir = "/home/ahana/road_data/exp/eval/tf_new/rgb_aug_ce/sftmx_results/"
     res2_dir = "/home/ahana/road_data/exp/eval/tf_new/hght_aug_ce/sftmx_results/"
     res3_dir = "/home/ahana/road_data/exp/eval/tf_new/hs_ce/sftmx_results/"
     res4_dir = "/home/ahana/road_data/exp/eval/tf_new/rgb_aug_17c_ce/sftmx_results1/"
@@ -176,7 +176,7 @@ if __name__=="__main__":
     #search_arg = (n_members)
     # global optimization of ensemble weights
     start = time.time()
-    result = differential_evolution(loss_function, bound_w, maxiter=70, tol=1e-5)
+    result = differential_evolution(loss_function, bound_w, maxiter=10, tol=1e-5)
     # get the chosen weights
     end = time.time()
     params = result['x']

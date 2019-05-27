@@ -131,7 +131,7 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         metric.add(pred, target)
     
     iou, miou = metric.value()
-    if num_class == 17
+    if num_class == 17:
         miou = (miou*17 - iou[0])/16
     
     print('Test:')

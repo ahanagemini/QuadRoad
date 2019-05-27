@@ -37,6 +37,7 @@ from models.model_atrous_GN import SegNet_atrous_GN
 from models.model_atrous_GN_dropout import SegNet_atrous_GN_dropout
 from models.model_atrous_hs_GN_do import SegNet_atrous_hs_GN_dropout
 from models.model_atrous_hs_nl import SegNet_atrous_hs_nl
+from models.model_hs import SegNet_hs
 from losses.losses import DiceLoss
 from losses.losses import FocalLoss
 from losses.losses import IoULoss
@@ -109,10 +110,13 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
         num_channels = 4
     else:
         print("NUmber of channels not supported")
+    print(model)
     # Define network
     if model=='hs':
         model = SegNet_atrous_hs(num_channels,num_class)
-    if model=='hs_nl':
+    elif model=='hs_nonatrous':
+        model = SegNet_hs(num_channels,num_class)
+    elif model=='hs_nl':
         model = SegNet_atrous_hs_nl(num_channels,num_class)
     elif model == 'hs_GN_do':
         model = SegNet_atrous_hs_GN_dropout(num_channels, num_class)
