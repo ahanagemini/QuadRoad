@@ -170,7 +170,7 @@ if __name__=="__main__":
 #        print("w2=" + str(sol.get_value(w2)))
 #        print("obj:" + str(sol.get_value(call)))
     # bounds for the grid search
-    bound_w = [(0.1, 0.9)  for _ in range(n_members)]
+    bound_w = [(0.0, 1.0)  for _ in range(n_members)]
     bound_w.append((40,60))
     # arguments to the loss function
     #search_arg = (n_members)

@@ -268,7 +268,7 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
                 outfile = "/home/ahana/pytorch_road/trained_models/"+file_prefix+"_" + str(epoch)
                 save(model.state_dict(), outfile)
 
-            if epoch == 75:
+            if epoch == 42:
                 outfile = "/home/ahana/pytorch_road/trained_models/"+file_prefix+"_75"
                 save(model.state_dict(), outfile)
         
@@ -335,7 +335,7 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
 def main():
 
     base_dir = "/home/ahana/road_data"
-    epochs = 80
+    epochs = 45
     batch_size = 4
     num_channels = int(sys.argv[1])
     num_class = int(sys.argv[2])

@@ -69,14 +69,15 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         train_loader, val_loader, test_loader, nclass = make_data_splits_p(base_dir, batch_size=4)
         num_channels = 4
     # List of file names
+    save_root = base_dir+'/large_dataset'
     if split == 'train':
-        with open(os.path.join(os.path.join(base_dir, 'train.txt')), "r") as f:
+        with open(os.path.join(os.path.join(save_root, 'train.txt')), "r") as f:
             lines = f.read().splitlines()    
     if split == 'val':
-        with open(os.path.join(os.path.join(base_dir, 'valid.txt')), "r") as f:
+        with open(os.path.join(os.path.join(save_root, 'valid.txt')), "r") as f:
             lines = f.read().splitlines()
     if split == 'test':
-        with open(os.path.join(os.path.join(base_dir, 'test.txt')), "r") as f:
+        with open(os.path.join(os.path.join(save_root, 'test.txt')), "r") as f:
             lines = f.read().splitlines()
     # Define and load network
     if model == 'hs': #hyperspectral with dropout

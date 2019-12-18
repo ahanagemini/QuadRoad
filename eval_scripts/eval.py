@@ -36,6 +36,7 @@ from metrics.iou import IoU
 from models.model_atrous_GN import SegNet_atrous_GN
 from models.model_atrous_hs_GN_do import SegNet_atrous_hs_GN_dropout
 from models.model_atrous_hs_nl import SegNet_atrous_hs_nl
+from models.model_hs import SegNet_hs
 
 '''
 A code to execute test for a given model:
@@ -81,21 +82,24 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         train_loader, val_loader, test_loader, nclass = make_data_splits_p4(base_dir, batch_size=4)
         num_channels = 4
     # List of  file names depending on split
+    list_dir = base_dir+'/large_dataset'
     if split == 'train':
-        with open(os.path.join(os.path.join(base_dir, 'train.txt')), "r") as f:
+        with open(os.path.join(os.path.join(list_dir, 'train.txt')), "r") as f:
             lines = f.read().splitlines()
     if split == 'train_aug':
-        with open(os.path.join(os.path.join(base_dir, 'train_aug.txt')), "r") as f:
+        with open(os.path.join(os.path.join(list_dir, 'train_aug.txt')), "r") as f:
             lines = f.read().splitlines()    
     if split == 'val':
-        with open(os.path.join(os.path.join(base_dir, 'valid.txt')), "r") as f:
+        with open(os.path.join(os.path.join(list_dir, 'valid.txt')), "r") as f:
             lines = f.read().splitlines()
     if split == 'test':
-        with open(os.path.join(os.path.join(base_dir, 'test.txt')), "r") as f:
+        with open(os.path.join(os.path.join(list_dir, 'test.txt')), "r") as f:
             lines = f.read().splitlines()
     # Define and load network
     if model == 'hs': #hyperspectral with dropout
         model = SegNet_atrous_hs(num_channels, num_class)
+    elif model=='hs_nonatrous':
+        model = SegNet_hs(num_channels,num_class)
     elif model == 'hs_GN_do':
         model = SegNet_atrous_hs_GN_dropout(num_channels, num_class)
     elif model=='hs_nl':

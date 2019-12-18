@@ -42,7 +42,7 @@ class RoadSegmentation(Dataset):
         self._num_classes = num_classes
         self._norm = norm
 
-        _splits_dir = self._base_dir
+        _splits_dir = self._base_dir + '/large_dataset'
 
         self.im_ids = []
         self.hs123 = []
