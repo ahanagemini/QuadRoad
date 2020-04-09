@@ -40,6 +40,8 @@ def compute_metric(params, fname="/home/ahana/road_data/valid.txt"):
     total_union = 0
     total_neg = 0
     total_diff = 0
+    total_fp = 0
+    total_fn = 0
     print(params)
     #assert n_members == len(params) -1
     for tile in tiles:
@@ -106,6 +108,9 @@ def compute_metric(params, fname="/home/ahana/road_data/valid.txt"):
         diff_sum = numpy.count_nonzero(combp!=target)
         combp[combp==1] = 2
         intersection = numpy.count_nonzero(combp==target)
+        fp = numpy.count_nonzero(combp==0) - intersection
+        fn = diff_sum - fp
+
         combp[combp==2] = 1
         if save_dir != 'unused':
             misc.toimage(combp, cmin=0, cmax=255).save(save_dir+"pred_results/"+tile+".png")
@@ -116,13 +121,18 @@ def compute_metric(params, fname="/home/ahana/road_data/valid.txt"):
         total_union += union
         total_neg += true_neg
         total_diff += diff_sum
-
+        total_fp += fp
+        total_fn += fn
     #print(total_intersection)
     #print(total_union)
     #print(total_diff)
     #print(total_neg)
     iou = total_intersection/total_union
     print(iou)
+    tpr = total_intersection/(total_intersection + total_fn)
+    tnr = total_neg / (total_neg + total_fp)
+    print(f'tpr {tpr}')
+    print(f'tnr {tnr}')
     return iou
 
 def normalize(weights):
@@ -176,7 +186,7 @@ if __name__=="__main__":
     #search_arg = (n_members)
     # global optimization of ensemble weights
     start = time.time()
-    result = differential_evolution(loss_function, bound_w, maxiter=10, tol=1e-5)
+    result = differential_evolution(loss_function, bound_w, maxiter=25, tol=1e-5)
     # get the chosen weights
     end = time.time()
     params = result['x']

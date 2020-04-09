@@ -35,9 +35,9 @@ class RoadSegmentation(Dataset):
         """
         super().__init__()
         self._base_dir = base_dir
-        self._hs123_dir = os.path.join(self._base_dir, 'data_hsi_split/123')
-        self._hs456_dir = os.path.join(self._base_dir, 'data_hsi_split/456')
-        self._hs78_dir = os.path.join(self._base_dir, 'data_hsi_split/78')
+        self._hs123_dir = os.path.join(self._base_dir, 'grid_shifted_tiles_hs/123')
+        self._hs456_dir = os.path.join(self._base_dir, 'grid_shifted_tiles_hs/456')
+        self._hs78_dir = os.path.join(self._base_dir, 'grid_shifted_tiles_hs/78')
         self._cat_dir = os.path.join(self._base_dir, cat_dir)
         self._num_classes = num_classes
         self._norm = norm
@@ -131,9 +131,9 @@ class RoadSegmentation(Dataset):
 
 
 def make_data_splits_hs(base_dir, num_class=2, cat_dir='rev_annotations', norm=0, purpose='train', batch_size=4):
-    train_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='train')
-    val_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='valid')
-    test_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='test')
+    train_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='grdshifted')
+    val_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='grdshifted')
+    test_set = RoadSegmentation(base_dir, num_class, cat_dir, norm, split='grdshifted')
     if purpose == 'train':
         train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=1)
     else:

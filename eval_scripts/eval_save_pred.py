@@ -68,6 +68,7 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         train_loader, val_loader, test_loader, nclass = make_data_splits_1c_aug(base_dir, num_class, 'rev_annot_augment', norm, 'eval', batch_size=4)
         num_channels = 1
     if num_channels == 8:
+        print(cat_dir)
         train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
     if num_channels == 0: # for using with the 4 predictions
         train_loader, val_loader, test_loader, nclass = make_data_splits_p(base_dir, batch_size=4)

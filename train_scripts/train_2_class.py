@@ -138,7 +138,8 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
             # self.criterion = nn.CrossEntropyLoss(weight=class_weights)
     if num_class == 2:
         #weights = [0.54, 6.87]
-        weights = [0.29, 1.69]
+        weights = [0.54, 6.88]
+        #weights = [0.29, 1.69]
         class_weights = FloatTensor(weights).cuda()
     if num_class == 17:
         weights = [0.0089, 0.0464, 4.715, 1.00, 0.06655, 27.692, 79.604, 0.273, 3.106, 0.305, 1, 21.071, 0.0806, 0.636, 1.439, 0.387, 10.614]
@@ -268,7 +269,7 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
                 outfile = "/home/ahana/pytorch_road/trained_models/"+file_prefix+"_" + str(epoch)
                 save(model.state_dict(), outfile)
 
-            if epoch == 42:
+            if epoch == 75:
                 outfile = "/home/ahana/pytorch_road/trained_models/"+file_prefix+"_75"
                 save(model.state_dict(), outfile)
         
@@ -335,7 +336,7 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
 def main():
 
     base_dir = "/home/ahana/road_data"
-    epochs = 45
+    epochs = 80
     batch_size = 4
     num_channels = int(sys.argv[1])
     num_class = int(sys.argv[2])

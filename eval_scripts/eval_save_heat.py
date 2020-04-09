@@ -56,7 +56,7 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
     if num_class == 17:
         cat_dir = 'ground_truth_500'
     if num_class == 2:
-        cat_dir = 'rev_annotations'
+        cat_dir = 'dummy_shifted_gt'
     if num_channels == 4:
         train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
     if num_channels == 3:
@@ -77,7 +77,7 @@ def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_nam
         with open(os.path.join(os.path.join(save_root, 'valid.txt')), "r") as f:
             lines = f.read().splitlines()
     if split == 'test':
-        with open(os.path.join(os.path.join(save_root, 'test.txt')), "r") as f:
+        with open(os.path.join(os.path.join(save_root, 'grdshifted.txt')), "r") as f:
             lines = f.read().splitlines()
     # Define and load network
     if model == 'hs': #hyperspectral with dropout
