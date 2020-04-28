@@ -5,15 +5,7 @@ import numpy as np
 import sys
 from tqdm import tqdm
 from torch.nn import BCEWithLogitsLoss
-from load_road.load_road_4c import make_data_splits_4c
-from load_road.load_road_3c import make_data_splits_3c
-from load_road.load_road_1c import make_data_splits_1c
-from load_road.load_hs import make_data_splits_hs
-from load_road.load_hs_aug import make_data_splits_hs_aug
-from load_road.load_road_pred4 import make_data_splits_p4
-from load_road.load_road_pred2 import make_data_splits_p2
-from load_road.load_road_3c_aug import make_data_splits_3c_aug
-from load_road.load_road_1c_aug import make_data_splits_1c_aug
+from load_road import *
 from torchvision import models
 from sklearn.metrics import confusion_matrix
 from torch import nn
@@ -68,48 +60,22 @@ def adjust_learning_rate(optimizer, i_iter, num_steps):
     lr = lr_poly(optimizer.param_groups[0]['lr'], i_iter, num_steps, 0.9)
     optimizer.param_groups[0]['lr'] = lr
 
-def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, loss_type, file_prefix, model):
+def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, loss_type, file_prefix, model, augment):
     # Define Dataloader
-    if num_class == 17:
-        cat_dir = 'ground_truth_500'
-    if num_class == 2:
-        cat_dir = 'rev_annotations'
-    if num_class == 2 and (num_channels == 5 or num_channels == 2 or num_channels == 9):
-        cat_dir = 'rev_annot_augment'
-    if num_class == 17 and (num_channels == 5 or num_channels == 2 or num_channels == 9):
-        cat_dir = 'gt_augment'
-    train_set = 'orig'
-    #if norm == 2:
-    #    if num_channels == 4:
-    #        train_loader, val_loader, test_loader, nclass = make_data_splits_p4(base_dir, batch_size=4)
-    #    if num_channels == 3:
-    #        train_loader, val_loader, test_loader, nclass = make_data_splits_3c_aug(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
-    #else:
     if num_channels == 4:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
+        train_loader, val_loader, test_loader = rgb_hght.split_data(base_dir,
+                num_class, norm, 'train', batch_size=4)
     elif num_channels == 3:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_3c(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
-    elif num_channels == 5:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_3c_aug(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
-        num_channels = 3
-        train_set = 'aug'
-    elif num_channels == 2:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_1c_aug(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
-        num_channels = 1
-        train_set = 'aug'
+        train_loader, val_loader, test_loader = rgb.split_data(base_dir,
+                num_class, norm, 'train', batch_size=4, augment=augment)
     elif num_channels == 1:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
+        train_loader, val_loader, test_loader = hght.split_data(base_dir,
+                num_class, norm, 'train', batch_size=4, augment=augment)
     elif num_channels == 8:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
-    elif num_channels == 9:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_hs_aug(base_dir, num_class, cat_dir, norm, 'train', batch_size=4)
-        num_channels = 8
-        train_set = 'aug'
-    elif num_channels == 0: # for using with the 4 predictions
-        train_loader, val_loader, test_loader, nclass = make_data_splits_p4(base_dir, batch_size=4)
-        num_channels = 4
+        train_loader, val_loader, test_loader, nclass = hs.split_data(base_dir,
+                num_class, norm, 'train', batch_size=4, augment=augment)
     else:
-        print("NUmber of channels not supported")
+        print("Number of channels not supported")
     print(model)
     # Define network
     if model=='hs':
@@ -242,7 +208,7 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
             intersection_over_union = intersection / union.astype(np.float32)
             RMIoU = intersection/(ground_truth_set + predicted_set - intersection)
             # Save trained best models till certain iterations
-            if train_set == 'aug':
+            if augment:
                 if RMIoU[1] > best and epoch <= 25:
                     best = RMIoU[1]
                     best_epoch = epoch
@@ -344,9 +310,11 @@ def main():
     loss_type = sys.argv[4]
     file_prefix = sys.argv[5]
     model = sys.argv[6]
+    augment = (sys.argv[7] == 'True')
+    print(augment)
     print('Starting Epoch: 0')
     print('Total Epoches:', epochs)
-    training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, loss_type, file_prefix, model)
+    training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm, loss_type, file_prefix, model, augment)
 
 
 if __name__ == "__main__":
