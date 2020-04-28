@@ -69,11 +69,14 @@ import os
 from  osgeo import ogr, osr, gdal
 
 
-def draw_road_mask(tiff_img, imperv_shp, *ignore_shps):
+def draw_road_mask(tiff_img, imperv_shp):
     """
     Given a geotiff satellite image and it's corresponding impervious surface
     data as shapefiles, create a mask with road (pixel value 0) regions and
     other classes like buildings, driveway and other regions. 
+    Args:
+        tiff_img: path to tiff image
+        imperv_shp: Path to .shp file for impervious surface data
     """
     leaf = os.path.basename(tiff_img)
     dirname = os.path.dirname(tiff_img)
@@ -142,6 +145,15 @@ def draw_road_mask(tiff_img, imperv_shp, *ignore_shps):
 
 
 def burn_shp_layer_to_geotiff(out_tiff, layer, pix_val):
+    """
+    Function to burn the class labels on tiff file and save image
+    Args:
+        out_tiff: output tiff file
+        layer: layer to be rasterized/ burned
+        pix_val: The class number for the object type
+    Returns:
+        status: success, etc.
+    """
     status = gdal.RasterizeLayer(out_tiff,  # output to our new dataset
                                  [1],  # output to our new dataset's first band
                                  layer,  # rasterize this layer
