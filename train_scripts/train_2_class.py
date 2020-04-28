@@ -239,7 +239,7 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
                 outfile = f'{base_dir}/trained_models/{file_prefix}_75'
                 save(model.state_dict(), outfile)
         
-            if train_set == 'aug':
+            if augment:
                 if epoch == 50:
                     outfile = f'{base_dir}/trained_models/{file_prefix}_50'
                     save(model.state_dict(), outfile)
@@ -292,16 +292,16 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
     fp.close()
     
     plt.plot(losses)
-    plt.savefig(f'{base_dir}/train_graphs/iou_graphs/loss_{file_prefix}.png')
+    plt.savefig(f'{base_dir}/train_graphs/loss_{file_prefix}.png')
     plt.clf()
     plt.plot(ious)
     print(losses)
     print(ious)
-    plt.savefig(f'{base_dir}/train_graphs/iou_graphs/iou_{file_prefix}.png')    
+    plt.savefig(f'{base_dir}/train_graphs/iou_{file_prefix}.png')    
 
 def main():
     cwd = os.getcwd()
-    base_dir = f'{cwd}/../data'
+    base_dir = f'{cwd}/data'
     epochs = 1
     batch_size = 4
     num_channels = int(sys.argv[1])
