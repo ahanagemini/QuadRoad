@@ -15,6 +15,10 @@ class ConfusionMatrix(metric.Metric):
 
     def __init__(self, num_classes, normalized=False):
         super().__init__()
+        """
+        :param num_classes: number of classes
+        :param normalized: whether confusion matrix is normalized
+        """
 
         self.conf = np.ndarray((num_classes, num_classes), dtype=np.int32)
         self.normalized = normalized
@@ -22,6 +26,9 @@ class ConfusionMatrix(metric.Metric):
         self.reset()
 
     def reset(self):
+        """
+        Reset confusion matrix to zeros
+        """
         self.conf.fill(0)
 
     def add(self, predicted, target):

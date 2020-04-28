@@ -21,6 +21,12 @@ class IoU(metric.Metric):
     """
 
     def __init__(self, num_classes, normalized=False, ignore_index=None):
+        """
+        :param num_classes: number of classes
+        :param normalized: whether confusion matrix is normalized
+        :param index: index of classes to ignore
+        """
+
         super().__init__()
         self.conf_metric = ConfusionMatrix(num_classes, normalized)
 
@@ -35,6 +41,9 @@ class IoU(metric.Metric):
                 raise ValueError("'ignore_index' must be an int or iterable")
 
     def reset(self):
+        """
+        Reset the confusion matrix to zeros
+        """
         self.conf_metric.reset()
 
     def add(self, predicted, target):

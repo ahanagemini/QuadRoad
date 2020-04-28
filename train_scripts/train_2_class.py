@@ -212,43 +212,43 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
                 if RMIoU[1] > best and epoch <= 25:
                     best = RMIoU[1]
                     best_epoch = epoch
-                    save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/best_"+file_prefix+"_25")
+                    save(model.state_dict(), f'{base_dir}/trained_models/best_{file_prefix}_25')
                 if RMIoU[1] > best and epoch <= 50:
                     best = RMIoU[1]
                     best_epoch = epoch
-                    save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/best_"+file_prefix+"_50")
+                    save(model.state_dict(), f'{base_dir}/trained_models/best_{file_prefix}_50')
                 if RMIoU[1] > best and epoch <= 75:
                     best = RMIoU[1]
                     best_epoch = epoch
-                    save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/best_"+file_prefix+"_75")
+                    save(model.state_dict(), f'{base_dir}/trained_models/best_{file_prefix}_75')
                 if RMIoU[1] > best:
                     best = RMIoU[1]
                     best_epoch = epoch
-                    save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/best_"+file_prefix)
+                    save(model.state_dict(), f'{base_dir}/trained_models/best_{file_prefix}')
             else:
                 if RMIoU[1] > best:
                     best = RMIoU[1]
                     best_epoch = epoch
-                    save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/best_"+file_prefix)
+                    save(model.state_dict(), f'{base_dir}/trained_models/best_{file_prefix}')
             # Saves models to see perfromance over time by testing on test set
             if epoch % 10 == 0:
-                outfile = "/home/ahana/pytorch_road/trained_models/"+file_prefix+"_" + str(epoch)
+                outfile = f'{base_dir}/trained_models/best_{file_prefix}_{epoch}'
                 save(model.state_dict(), outfile)
 
             if epoch == 75:
-                outfile = "/home/ahana/pytorch_road/trained_models/"+file_prefix+"_75"
+                outfile = f'{base_dir}/trained_models/{file_prefix}_75'
                 save(model.state_dict(), outfile)
         
             if train_set == 'aug':
                 if epoch == 50:
-                    outfile = "/home/ahana/pytorch_road/trained_models/"+file_prefix+"_50"
+                    outfile = f'{base_dir}/trained_models/{file_prefix}_50'
                     save(model.state_dict(), outfile)
 
                 if epoch == 25:
-                    outfile = "/home/ahana/pytorch_road/trained_models/"+file_prefix+"_25"
+                    outfile = f'{base_dir}/trained_models/{file_prefix}_25'
                     save(model.state_dict(), outfile)
 
-            save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/final_"+file_prefix)
+            save(model.state_dict(), f'{base_dir}/trained_models/final_{file_prefix}')
             ious.append(RMIoU[1])
             print('Validation:')
             print('[Epoch: %d, numImages: %5d]' % (epoch, i * batch_size + image.data.shape[0]))
@@ -262,16 +262,16 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
             if miou > best:
                 best = miou
                 best_epoch = epoch
-                save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/best_"+file_prefix)
+                save(model.state_dict(),  f'{base_dir}/trained_models/best_{file_prefix}')
             if epoch % 10 == 0:
-                outfile = "/home/ahana/pytorch_road/trained_models/"+file_prefix+"_" + str(epoch)
+                outfile =  f'{base_dir}/trained_models/{file_prefix}_{epoch}'
                 save(model.state_dict(), outfile)
 
             if epoch == 75:
-                outfile = "/home/ahana/pytorch_road/trained_models/"+file_prefix+"_75"
+                outfile = f'{base_dir}/trained_models/{file_prefix}_75'
                 save(model.state_dict(), outfile)
 
-            save(model.state_dict(), "/home/ahana/pytorch_road/trained_models/final_"+file_prefix)
+            save(model.state_dict(), f'{base_dir}/trained_models/final_{file_prefix}')
             ious.append(siou[1])
             print('Validation:')
             print('[Epoch: %d, numImages: %5d]' % (epoch, i * batch_size + image.data.shape[0]))
@@ -283,7 +283,7 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
     # Save results
     losses1 = [(i,x) for i,x in enumerate(losses)]
     ious1 = [(i,x) for i,x in enumerate(ious)]
-    fp = open("/home/ahana/pytorch_road/result_texts/"+file_prefix+".txt", "w")
+    fp = open(f'{base_dir}/result_texts/{file_prefix}.txt', "w")
     fp.write(str(losses1))
     fp.write("\n")
     fp.write(str(ious1))
@@ -292,17 +292,17 @@ def training_and_val(epochs, base_dir, batch_size, num_channels, num_class, norm
     fp.close()
     
     plt.plot(losses)
-    plt.savefig("/home/ahana/pytorch_road/loss_graphs/loss_"+file_prefix+".png")
+    plt.savefig(f'{base_dir}/train_graphs/iou_graphs/loss_{file_prefix}.png')
     plt.clf()
     plt.plot(ious)
     print(losses)
     print(ious)
-    plt.savefig("/home/ahana/pytorch_road/iou_graphs/iou_"+file_prefix+".png")    
+    plt.savefig(f'{base_dir}/train_graphs/iou_graphs/iou_{file_prefix}.png')    
 
 def main():
-
-    base_dir = "/home/ahana/road_data"
-    epochs = 80
+    cwd = os.getcwd()
+    base_dir = f'{cwd}/../data'
+    epochs = 1
     batch_size = 4
     num_channels = int(sys.argv[1])
     num_class = int(sys.argv[2])
