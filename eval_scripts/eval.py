@@ -4,186 +4,215 @@ import scipy.misc
 import numpy as np
 import sys
 from tqdm import tqdm
-from torch.nn import BCEWithLogitsLoss
-from load_road.load_road_3c import make_data_splits_3c
-from load_road.load_road_1c import make_data_splits_1c
-from load_road.load_road_4c import make_data_splits_4c
-from load_road.load_hs import make_data_splits_hs
-from load_road.load_road_pred4 import make_data_splits_p4
-from load_road.load_road_3c_aug import make_data_splits_3c_aug
-from load_road.load_road_1c_aug import make_data_splits_1c_aug
-from load_road.load_hs_aug import make_data_splits_hs_aug
 from torchvision import models
-from sklearn.metrics import confusion_matrix
 from torch import nn
 from torch import optim
 from torchsummary import summary
-from models.model import SegNet
-from models.model_leaky import SegNet_leaky
-from models.model_deep import SegNet_deep
 from torch import no_grad
 from torch import FloatTensor
 from torch import save
 from torch import load
 import matplotlib.pyplot as plt
-from models.model_atrous import SegNet_atrous
-from models.DeepLabv3_plus import DeepLabv3_plus
-from models.model_atrous_nl import SegNet_atrous_nl
-from models.model_atrous_hs import SegNet_atrous_hs
-from models.model_atrous_GN_dropout import SegNet_atrous_GN_dropout
-from models.model_shallow import SegNet_shallow
-from metrics.iou import IoU
-from models.model_atrous_GN import SegNet_atrous_GN
-from models.model_atrous_hs_GN_do import SegNet_atrous_hs_GN_dropout
-from models.model_atrous_hs_nl import SegNet_atrous_hs_nl
+from load_road import *
+from models.model import SegNet
+from models.model_A import SegNet_A
+from models.model_AL import SegNet_AL
 from models.model_hs import SegNet_hs
+from models.model_hs_A import SegNet_hs_A
+from models.model_hs_AL import SegNet_hs_AL
+from metrics.iou import IoU
 
 '''
-A code to execute test for a given model:
-    Args: num_channels, num_classes, model_name
-          num_channels: number of input channels, also used to indicate augmented data.
-                        0 for the model that uses 4 predictions
-                        5 for 3 channel augmented
-                        2 for 1 channel augmented
-                        9 for 8 channel augmented
-          num_classes: how many classes to be predicted
-          cat_dir: directory that has the labels
-          norm: whether to use normalize or not. 0 or 1.
-          model_name: name of trained model to load
-          split: train, val, test
-          model: model type: whether it uses GN or BN, uses dropout or not, and for how many channels
-                 refer to models directory for morew info on different models
+A code to execute evaluation for the specified model
+    Usage: eval.py --batch_size <batch_size>
+                --num_channels <num_channels> --num_class <num_class>
+                --model_name <model saved filename> --model <model_name>
+                --split <data split> [--norm]
+
+          num_channels: 1, 3, 4, 8
+          num_class: 2 or 17
+          model: model may be SegNet, SegNet_A, SegNet_AL, SegNet_hs,
+            SegNet_hs_A, SegNet_hs_AL, SegNet_hs_ALD
+          norm: whether to perform normalization or not. boolean
+          model_name: filename for file to load saved model from
+          split: train, valid or test
 '''
 
-def test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name, split, model):
-    # Define Dataloader
-    if num_class == 17:
-        cat_dir = 'ground_truth_500'
-    if num_class == 2:
-        cat_dir = 'rev_annotations'
+def data_loader(num_channels, base_dir,
+        num_class, norm, purpose, batch_size, split):
+    """
+    Function that loads data for all splits based on num_channels
+    Args:
+        num_channels: number of channels in input data
+        base_dir: directory that contains data
+        num_class: number of classes
+        norm: whether to perform normalization
+        purpose: train/test
+        batch_size: batch size for trainig
+        split: The split to be used
+    Returns:
+        data_loader for required split
+    """
     if num_channels == 4:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_4c(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
-    if num_channels == 3:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_3c(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
-    if num_channels == 5:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_3c_aug(base_dir, num_class, 'rev_annot_augment', norm, 'eval', batch_size=4)
-        num_channels = 3
-    if num_channels == 1:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_1c(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
-    if num_channels == 2:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_1c_aug(base_dir, num_class, 'rev_annot_augment', norm, 'eval', batch_size=4)
-        num_channels = 1
-    if num_channels == 8:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_hs(base_dir, num_class, cat_dir, norm, 'eval', batch_size=4)
-    if num_channels == 9:
-        train_loader, val_loader, test_loader, nclass = make_data_splits_hs_aug(base_dir, num_class, 'rev_annot_augment', norm, 'eval', batch_size=4)
-        num_channels = 8
-    if num_channels == 0: # for using with the 4 predictions
-        train_loader, val_loader, test_loader, nclass = make_data_splits_p4(base_dir, batch_size=4)
-        num_channels = 4
-    # List of  file names depending on split
-    list_dir = base_dir+'/large_dataset'
-    if split == 'train':
-        with open(os.path.join(os.path.join(list_dir, 'train.txt')), "r") as f:
-            lines = f.read().splitlines()
-    if split == 'train_aug':
-        with open(os.path.join(os.path.join(list_dir, 'train_aug.txt')), "r") as f:
-            lines = f.read().splitlines()    
-    if split == 'val':
-        with open(os.path.join(os.path.join(list_dir, 'valid.txt')), "r") as f:
-            lines = f.read().splitlines()
-    if split == 'test':
-        with open(os.path.join(os.path.join(list_dir, 'test.txt')), "r") as f:
-            lines = f.read().splitlines()
-    # Define and load network
-    if model == 'hs': #hyperspectral with dropout
-        model = SegNet_atrous_hs(num_channels, num_class)
-    elif model=='hs_nonatrous':
-        model = SegNet_hs(num_channels,num_class)
-    elif model == 'hs_GN_do':
-        model = SegNet_atrous_hs_GN_dropout(num_channels, num_class)
-    elif model=='hs_nl':
-        model = SegNet_atrous_hs_nl(num_channels,num_class)
-    elif model == 'shallow': 
-        model = SegNet_shallow(num_channels, num_class)
-    elif model == 'GN':
-        model = SegNet_atrous_GN(num_channels, num_class)
-    elif model == 'GN_dropout':
-        model = SegNet_atrous_GN_dropout(num_channels, num_class)
-    else: # no GN or dropout
-        model = SegNet_atrous(num_channels, num_class)
+        train_loader, val_loader, test_loader = rgb_hght.split_data(base_dir,
+                num_class, norm, 'eval', batch_size=4)
+    elif num_channels == 3:
+        train_loader, val_loader, test_loader = rgb.split_data(base_dir,
+                num_class, norm, 'eval', batch_size=4, augment=False)
+    elif num_channels == 1:
+        train_loader, val_loader, test_loader = hght.split_data(base_dir,
+                num_class, norm, 'eval', batch_size=4, augment=False)
+    elif num_channels == 8:
+        train_loader, val_loader, test_loader = hs.split_data(base_dir,
+                num_class, norm, 'eval', batch_size=4, augment=False)
+    else:
+        print("Number of channels not supported")
+        sys.exit()
 
+    if split == 'train':
+        return train_loader
+    if split == 'valid':
+        return val_loader
+    if split == 'test':
+        return test_loader
+
+def select_model(model, num_channels, num_class):
+    """
+    Function that selects correct model type
+    Args:
+        model: name of model
+        num_channels: number of channels in input data
+        num_class: number of classes
+    Returns:
+        model object
+    """
+
+    if model=='SegNet_A':
+        model = SegNet_A(num_channels,num_class)
+    elif model=='SegNet_AL':
+        model = SegNet_AL(num_channels,num_class)
+    elif model=='SegNet':
+        model = SegNet(num_channels,num_class)
+    elif model == 'SegNet_hs':
+        model = SegNet_hs(num_channels, num_class)
+    elif model == 'SegNet_hs_A':
+        model = SegNet_hs_A(num_channels, num_class)
+    elif model == 'SegNet_hs_AL':
+        model = SegNet_hs_AL(num_channels, num_class, False)
+    elif model == 'SegNet_hs_ALD':
+        model = SegNet_hs_AL(num_channels, num_class, True)
+    else:
+        print("Incorrect model name")
+        sys.exit()
+    return model
+
+def create_save_paths(model, model_name, num_class, num_channels):
+    """
+    Function that creates paths for saving predictions
+    softmax probailities (softmax in range 0-200) for road class
+    Args:
+        model: model type
+        model_name: saved model name
+        num_class: number of classes
+        num_channels: number of channels in input data
+    Returns:
+        pred_dir path and heat_dir path
+    """
+    save_dir = f'{model}_{model_name}_{num_class}_{num_channel}'
+    pred_dir = f'{base_dir}/preds/pred_{save_dir}'
+    heat_dir = f'{base_dir}/heatmaps/heat_{save_dir}'
+    if not os.path.exists(pred_dir):
+        os.makedirs(pred_dir)
+    if not os.path.exists(heat_dir):
+        os.makedirs(heat_dir)
+    return pred_dir, heat_dir
+
+def test(base_dir, batch_size, num_channels, num_class,
+        norm, model_name, split, model):
+    """
+    Function to perform evaluation and save th epredictions
+    and softmax probabilities (softmax probabilities 
+    for road class only in range 0-200)
+    Args:
+        base_dir: directory that cocntains all data
+        batch_size: the training batch size
+        num_channels
+        num_class
+        norm: Use normalization or not
+        model_name: name of saved model file
+        model: the name of the model
+        split: train, valid, test
+    """
+
+    # Define Dataloader
+    split_loader = data_loader(num_channels, base_dir,
+            num_class, norm, 'train', batch_size, split)
+    # List of  file names depending on split
+    with open(os.path.join(os.path.join(base_dir, f'{split}.txt')), "r") as f:
+        lines = f.read().splitlines()
+    pred_dir, heat_dir = create_save_paths(model, model_name,
+            num_class, num_channels)
+    # Define and load network
+    model = select_model(model, num_channels, num_class)
     model = model.cuda()
-    model.load_state_dict(load("/home/ahana/pytorch_road/trained_models/"+model_name))
+    model.load_state_dict(load(f'{base_dir}/trained_models/{model_name}'))
     # Start tests
     model.eval()
     metric = IoU(num_class)
-    if split == 'train':
-        tbar = tqdm(train_loader)
-    if split == 'val':
-        tbar = tqdm(val_loader)
-    if split == 'test':
-        tbar = tqdm(test_loader)
-    overall_confusion_matrix = None
+    tbar = tqdm(split_loader)
     for i, sample in enumerate(tbar):
         image, target = sample['image'], sample['label']
         image, target = image.cuda(), target.cuda()
         with no_grad():
             output = model(image)
-        
         pred = output.data.cpu()
         target = target.cpu()
         metric.add(pred, target)
+        # Code to get predictions
+        pred_save = np.argmax(pred, axis=1)
+        # Code to use for saving output heat maps
+        fn = nn.Softmax()
+        sftmx = fn(output)
+        heat_save = sftmx.data.cpu().numpy()
+        for j in range(0, batch_size):
+            predFilepath = f'{pred_dir}/{lines[i*batch_size+j]}.png'
+            pred = pred_save[j,:,:]
+            scipy.misc.toimage(pred,cmin=0, cmax=255).save(predFilepath)
+            heat = heat_save[j,1,:,:]
+            heat = heat * 200.0
+            padded_heat = heat_save.astype(dtype=np.uint8)
+            unpad_heat = padded_heat[6:506,6:506]
+            heatFilepath = f'{heat_dir}/{lines[i*batch_size+j]}.png'
+            scipy.misc.toimage(unpad_heat, cmin=0,cmax=255).save(heatFilepath)
 
-        # Code to use for removing padding
-        pred_save = output.data.cpu().numpy()
-        target_save = target.cpu().numpy()
-        pred_save = np.argmax(pred_save, axis=1)
-
-        #pred = output.data.cpu().numpy()
-        #target = target.cpu().numpy()
-        #pred = np.argmax(pred, axis=1)
-        pred_unpad = pred_save[:,6:506,6:506]
-        target_unpad = target_save[:,6:506,6:506]
-        target_f = target_unpad.flatten()
-        pred_f = pred_unpad.flatten()
-        current_confusion_matrix = confusion_matrix(y_true=target_f, y_pred=pred_f, labels=[0, 1])
-
-        if overall_confusion_matrix is not None:
-            overall_confusion_matrix += current_confusion_matrix
-        else:
-            overall_confusion_matrix = current_confusion_matrix
-
-
-        intersection = overall_confusion_matrix[1][1]
-        ground_truth_set = overall_confusion_matrix.sum(axis=1)
-        predicted_set = overall_confusion_matrix.sum(axis=0)
-        union =  overall_confusion_matrix[0][1] + overall_confusion_matrix[1][0]
-
-        intersection_over_union = intersection / union.astype(np.float32)
-        RMIoU = intersection/(ground_truth_set + predicted_set - intersection) 
-    
-    # This is after removing padding
-    print('Test:')
-    print("RMIoU: {}, Intersection: {}, Ground truth: {}, Predicted: {}".format(RMIoU, intersection, ground_truth_set, predicted_set))
     iou, miou = metric.value()
-    # Result with the padding
-    print('Test:')
-    print("IoU: {}, MIoU: {}".format(iou, miou))
+    if num_class == 17:
+        miou = (miou*17 - iou[0])/16
+    print("IoU: {}, MIoU: {}, RMIoU: {}".format(iou, miou, iou[1]))
     metric.reset()
 
 def main():
 
-    base_dir = "/home/ahana/road_data"
-    batch_size = 4
-    num_channels = int(sys.argv[1])
-    num_class = int(sys.argv[2])
-    cat_dir = sys.argv[3]
-    norm = int(sys.argv[4])
-    model_name = sys.argv[5]
-    model = sys.argv[6]
-    split = sys.argv[7]
-    test(base_dir, batch_size, num_channels, num_class, cat_dir, norm, model_name, split, model)
+    cwd = os.getcwd()
+    base_dir = f'{cwd}/data'
+    parser = argparse.ArgumentParser(description='train')
+    parser.add_argument('--batch_size', type=int, default='4',
+                    help='batch size for training')
+    parser.add_argument('--num_channels', type=int, default=3,
+                    help='Number of input channels')
+    parser.add_argument('--num_class', type=int, default='2',
+                    help='Number of classes')
+    parser.add_argument('--model', type=str, default='SegNet',
+                    help='Name of model to be used')
+    parser.add_argument('--model_name', type=str, default='test',
+                    help='exact filename of model to load')
+    parser.add_argument('--norm', action='store_true',
+                    help='whether to use normalization')
+    parser.add_argument('--split', type=str, default='test',
+                    help='split to be used for evaluation')
+    args = parser.parse_args()
+    test(args.base_dir, args.batch_size, args.num_channels, args.num_class,
+            args.norm, args.model_name, args.split, args.model)
 
 
 if __name__ == "__main__":
