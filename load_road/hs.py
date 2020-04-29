@@ -118,7 +118,7 @@ class HS(Dataset):
         #print(_t_hs456.shape)
         #print(_t_hs78.shape)
         _t_img = cat((_t_hs123,_t_hs456,_t_hs78),0)
-        if self._norm == 1:
+        if self._norm:
             composed_transforms = transforms.Compose(
                     [transforms.Normalize(mean=(0.00288, 0.00402, 0.00453,
                         0.00249, 0.00204, 0.00333, 0.00581, 0.00410),
@@ -170,7 +170,7 @@ class HS(Dataset):
 
 
 def split_data(base_dir, num_class=2,
-        norm=0, purpose='train', batch_size=4, augment=False):
+        norm=False, purpose='train', batch_size=4, augment=False):
     """
     Function to load data for separate data splits
     Args:
@@ -205,4 +205,4 @@ def split_data(base_dir, num_class=2,
     test_loader = DataLoader(test_set, batch_size=batch_size,
             shuffle=False, num_workers=1)
 
-    return train_loader, val_loader, test_loader, num_class
+    return train_loader, val_loader, test_loader

@@ -89,7 +89,7 @@ class HGHT(Dataset):
         _t_hght = composed_transforms(_hght)
         #if self.from_class == True:
         #    _t_hght = _t_hght * 15
-        if self._norm == 1:
+        if self._norm:
             composed_transforms = transforms.Compose(
                     [transforms.Normalize(mean=(0.4285,), std=(0.197,))])
             _tn_hght = composed_transforms(_t_hght)
@@ -134,7 +134,7 @@ class HGHT(Dataset):
 
 
 def split_data(base_dir, num_class=2,
-        norm=0, purpose='train', batch_size=4, augment=False):
+        norm=False, purpose='train', batch_size=4, augment=False):
 
     """
     Function to load data for separate data splits

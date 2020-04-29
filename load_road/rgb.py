@@ -85,7 +85,7 @@ class RGB(Dataset):
         composed_transforms = transforms.Compose([ transforms.ToTensor()])
         _t_img = composed_transforms(_img)
         #print(tmax(_t_img))
-        if self._norm == 1:
+        if self._norm:
             composed_transforms = transforms.Compose(
                     [transforms.Normalize(mean=(0.339, 0.336, 0.302),
                         std=(0.237, 0.201, 0.160))])
@@ -134,7 +134,7 @@ class RGB(Dataset):
 
 
 def split_data(base_dir, num_class=2,
-        norm=0, purpose='train', batch_size=4, augment=False):
+        norm=False, purpose='train', batch_size=4, augment=False):
     """
     Function to load data for separate data splits
     Args:

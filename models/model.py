@@ -4,24 +4,33 @@ import torch.nn.functional as F
 from collections import OrderedDict
 
 '''
-SegNet model
+Basic unmodified SegNet model
 '''
 class SegNet(nn.Module):
-    def __init__(self,input_nbr,label_nbr):
+    """
+    Class that defines SegNet model and creates object of the model
+    """
+    def __init__(self, input_nbr, label_nbr):
+        """
+        :param input_nbr: number of input channels
+        :param label_nbr: number of output channels
+        """
         super(SegNet, self).__init__()
 
         batchNorm_momentum = 0.1
-
+        # Block 1 encoder operations
         self.conv11 = nn.Conv2d(input_nbr, 64, kernel_size=3, padding=1)
         self.bn11 = nn.BatchNorm2d(64, momentum= batchNorm_momentum)
         self.conv12 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
         self.bn12 = nn.BatchNorm2d(64, momentum= batchNorm_momentum)
 
+        # Block 2 encoder operations
         self.conv21 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
         self.bn21 = nn.BatchNorm2d(128, momentum= batchNorm_momentum)
         self.conv22 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
         self.bn22 = nn.BatchNorm2d(128, momentum= batchNorm_momentum)
 
+        # Block 3 encoder operations
         self.conv31 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
         self.bn31 = nn.BatchNorm2d(256, momentum= batchNorm_momentum)
         self.conv32 = nn.Conv2d(256, 256, kernel_size=3, padding=1)
@@ -29,6 +38,7 @@ class SegNet(nn.Module):
         self.conv33 = nn.Conv2d(256, 256, kernel_size=3, padding=1)
         self.bn33 = nn.BatchNorm2d(256, momentum= batchNorm_momentum)
 
+        # Block 4 encoder operations
         self.conv41 = nn.Conv2d(256, 512, kernel_size=3, padding=1)
         self.bn41 = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
         self.conv42 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
@@ -36,6 +46,7 @@ class SegNet(nn.Module):
         self.conv43 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
         self.bn43 = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
 
+        # Block 5 encoder operations
         self.conv51 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
         self.bn51 = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
         self.conv52 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
@@ -43,6 +54,7 @@ class SegNet(nn.Module):
         self.conv53 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
         self.bn53 = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
 
+        # Block 5 decoder operation
         self.conv53d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
         self.bn53d = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
         self.conv52d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
@@ -50,6 +62,7 @@ class SegNet(nn.Module):
         self.conv51d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
         self.bn51d = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
 
+        # Block 4 decoder operations
         self.conv43d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
         self.bn43d = nn.BatchNorm2d(512, momentum= batchNorm_momentum)
         self.conv42d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
@@ -57,6 +70,7 @@ class SegNet(nn.Module):
         self.conv41d = nn.Conv2d(512, 256, kernel_size=3, padding=1)
         self.bn41d = nn.BatchNorm2d(256, momentum= batchNorm_momentum)
 
+        # Block 3 decoder operations
         self.conv33d = nn.Conv2d(256, 256, kernel_size=3, padding=1)
         self.bn33d = nn.BatchNorm2d(256, momentum= batchNorm_momentum)
         self.conv32d = nn.Conv2d(256, 256, kernel_size=3, padding=1)
@@ -64,17 +78,26 @@ class SegNet(nn.Module):
         self.conv31d = nn.Conv2d(256,  128, kernel_size=3, padding=1)
         self.bn31d = nn.BatchNorm2d(128, momentum= batchNorm_momentum)
 
+        # Block 2 decoder operations
         self.conv22d = nn.Conv2d(128, 128, kernel_size=3, padding=1)
         self.bn22d = nn.BatchNorm2d(128, momentum= batchNorm_momentum)
         self.conv21d = nn.Conv2d(128, 64, kernel_size=3, padding=1)
         self.bn21d = nn.BatchNorm2d(64, momentum= batchNorm_momentum)
 
+        # Block 1 decoder operations
         self.conv12d = nn.Conv2d(64, 64, kernel_size=3, padding=1)
         self.bn12d = nn.BatchNorm2d(64, momentum= batchNorm_momentum)
         self.conv11d = nn.Conv2d(64, label_nbr, kernel_size=3, padding=1)
 
 
     def forward(self, x):
+        """
+        Function to apply the model on the input x
+        Args:
+            x: input data
+        Returns:
+            x11d: The output of the model
+        """
 
         # Stage 1
         x11 = F.relu(self.bn11(self.conv11(x)))
@@ -135,9 +158,12 @@ class SegNet(nn.Module):
 
         return x11d
 
-    def load_from_segnet(self, model_path):
+    def load_model(self, model_path):
+        """
+        Function to load saved model
+        Args:
+            model_path: Path to load model data from
+        """
         s_dict = self.state_dict()# create a copy of the state dict
         th = torch.load(model_path).state_dict() # load the weigths
-        # for name in th:
-            # s_dict[corresp_name[name]] = th[name]
         self.load_state_dict(th)

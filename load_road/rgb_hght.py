@@ -88,7 +88,7 @@ class RGB_HGHT(Dataset):
         _t_img = composed_transforms(_img)
         _t_hght = composed_transforms(_hght)
         _t_imhg = cat((_t_img,_t_hght),0)
-        if self._norm == 1:
+        if self._norm:
             #composed_transforms = transforms.Compose([ transforms.Normalize(mean=(0.339, 0.336, 0.302, 0.4285), std=(0.237, 0.201, 0.160, 0.4436))])
             composed_transforms = transforms.Compose(
                     [transforms.Normalize(
@@ -137,7 +137,7 @@ class RGB_HGHT(Dataset):
 
 
 def split_data(base_dir, num_class=2,
-        norm=0, purpose='train', batch_size=4):
+        norm=False, purpose='train', batch_size=4):
     """
     Function to load data for separate data splits
     Args:
