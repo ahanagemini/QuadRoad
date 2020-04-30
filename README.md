@@ -1,5 +1,5 @@
 # Road Segmentation using Multi-modal Data and MUlti-class Ground truth
-Project for using aerial images, Lidar data, multi-spectral images to perform segemntation of paved roads by using binary and multi-class ground truth. Four different models are trained and then the softmax values for each pixel are combined used weighted averaging. The weights are computed using differential evolution to optimize the global intersection over union by using th evalidation data. <br />
+Project for using aerial images, Lidar data, multi-spectral images to perform segemntation of paved roads by using binary and multi-class ground truth. Four different models are trained and then the softmax values for each pixel are combined used weighted averaging. The weights are computed using differential evolution to optimize the global intersection over union by using th evalidation data.  
 The paper is under review for KES conference. <br/>
 
 <b>Project Information: </b> <br />
