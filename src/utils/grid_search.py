@@ -174,7 +174,7 @@ if __name__=="__main__":
     weights = normalize(params[:-1])
     percent = float(params[-1])
     print('Optimized Weights: %s' % weights)
-    # evaluate chosen weights
+    # evaluate chosen weights on validation and test set
     params_final = list(weights)
     params_final.append(percent)
     score = compute_metric(params_final)
