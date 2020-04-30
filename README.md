@@ -4,9 +4,9 @@ The paper is under review for KES conference.
 
 **Project Information:**  
 The project performs the following steps:  
-1.	For the aerial images, Lidar images (1 channel) with binary ground truth and aerial images with multi-class ground truth, the following models are available:  
- 1. 	SegNet  
-	*	https://arxiv.org/abs/1511.00561  
+1.  For the aerial images, Lidar images (1 channel) with binary ground truth and aerial images with multi-class ground truth, the following models are available:  
+    1.  SegNet  
+	*  https://arxiv.org/abs/1511.00561  
  2. SegNet with Atrous convolution se the code for src/model/model\_A.py for details (SegNet\_A)  
  3. SegNet with atrous convolution and leaky relu (SegNet\_AL)  
  4. DeepLabv3+ not a part of the pytorch code but under deeplab\_code  
