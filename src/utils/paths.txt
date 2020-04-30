@@ -1,0 +1,8 @@
+/home/ahana/road_data/valid.txt
+/home/ahana/road_data/annotations/
+/home/ahana/road_data/exp/eval/tf_new/rgb_aug_ce/sftmx_results/
+/home/ahana/road_data/exp/eval/tf_new/hght_aug_ce/sftmx_results/
+/home/ahana/road_data/exp/eval/tf_new/hs_ce/sftmx_results/
+/home/ahana/road_data/exp/eval/tf_new/rgb_aug_17c_ce/sftmx_results1/
+unused
+unused
