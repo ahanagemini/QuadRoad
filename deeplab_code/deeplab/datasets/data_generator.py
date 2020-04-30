@@ -98,9 +98,10 @@ _ADE20K_INFORMATION = DatasetDescriptor(
 
 _TLH_SEG_RGB_INFORMATION = DatasetDescriptor(
     splits_to_sizes={
-        'train': 2640,
-        'trainval': 240,
-        'val': 2400,
+        'train': 13500,
+        'trainval': 900,
+        'val': 10800,
+        'grdshifted': 15194,
         'train_aug': 7920,
         'view': 400
     },
@@ -110,9 +111,10 @@ _TLH_SEG_RGB_INFORMATION = DatasetDescriptor(
 
 _TLH_SEG_HGHT_INFORMATION = DatasetDescriptor(
     splits_to_sizes={
-        'train': 2640,
-        'trainval': 240,
-        'val': 2400,
+        'train': 13500,
+        'trainval': 900,
+        'val': 10800,
+        'grdshifted': 15194,
         'train_aug': 7920,
         'view': 400
     },
@@ -133,9 +135,10 @@ _TLH_SEG_TRI2_INFORMATION = DatasetDescriptor(
 
 _TLH_SEG_RGB_17C_INFORMATION = DatasetDescriptor(
     splits_to_sizes={
-        'train': 2640,
-        'trainval': 240,
-        'val': 2400,
+        'train': 13500,
+        'trainval': 900,
+        'val': 10800,
+        'grdshifted': 15194,
         'train_aug': 7920,
         'view': 400
     },
@@ -155,6 +158,17 @@ _TLH_SEG_RGBH17C_INFORMATION = DatasetDescriptor(
     ignore_label=2,
 )
 
+_TLH_SEG_CONFUSION3_INFORMATION = DatasetDescriptor(
+    splits_to_sizes={
+        'train': 2640,
+        'trainval': 240,
+        'val': 2400,
+        'train_aug': 7920,
+        'view': 400
+    },
+    num_classes=2,
+    ignore_label=2,
+)
 
 _DATASETS_INFORMATION = {
     'cityscapes': _CITYSCAPES_INFORMATION,
@@ -164,6 +178,7 @@ _DATASETS_INFORMATION = {
     'tlh_seg_hght': _TLH_SEG_HGHT_INFORMATION,
     'tlh_seg_tri2': _TLH_SEG_TRI2_INFORMATION,
     'tlh_seg_rgbh17c': _TLH_SEG_RGBH17C_INFORMATION,
+    'tlh_seg_confusion3': _TLH_SEG_CONFUSION3_INFORMATION,
     'tlh_seg_rgb_17c': _TLH_SEG_RGB_17C_INFORMATION,
 }
 

@@ -11,26 +11,26 @@ import numpy as np
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_string('image_folder',
-                           '/home/ahana/road_data/rgb_augment/',
+                           '/home/biswas/datasets/road_graph_extract_dataset/rgb/',
                            'Folder containing images.')
 
 tf.app.flags.DEFINE_string(
     'semantic_segmentation_folder',
-    '/home/ahana/road_data/gt_augment/',
+    '/home/ahana/road_data/annotations/',
     'Folder containing semantic segmentation annotations.')
 
 tf.app.flags.DEFINE_string(
     'list_folder',
-    '/home/ahana/road_data/',
+    '/home/ahana/road_data/large_dataset/',
     'Folder containing lists for training and validation')
 
 tf.app.flags.DEFINE_string(
     'output_dir',
-    '/home/ahana/road_data/tfrecord/new_tf/rgb_aug_17c',
+    '/home/ahana/road_data/tfrecord/large_dataset/rgb',
     'Path to save converted SSTable of TensorFlow examples.')
 
 
-_NUM_SHARDS = 40
+_NUM_SHARDS = 225
 
 
 def _convert_dataset(dataset_split):
@@ -87,7 +87,7 @@ def _convert_dataset(dataset_split):
 
 
 def main(unused_argv):
-  dataset_splits = tf.gfile.Glob(os.path.join(FLAGS.list_folder, 'train.txt'))
+  dataset_splits = tf.gfile.Glob(os.path.join(FLAGS.list_folder, 'trainval.txt'))
   #print(dataset_splits)
   #exit(0)
   for dataset_split in dataset_splits:
