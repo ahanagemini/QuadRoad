@@ -4,6 +4,7 @@ The paper is under review for KES conference.
 
 **Project Information:**  
 The project performs the following steps:  
+
 1.  For the aerial images, Lidar images (1 channel) with binary ground truth and aerial images with multi-class ground truth, the following models are available:  
     1.  SegNet  
 	*  https://arxiv.org/abs/1511.00561  
